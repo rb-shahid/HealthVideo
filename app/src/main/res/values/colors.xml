@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3b3838</color>
-    <color name="colorPrimaryDark">#211d1d</color>
+    <color name="colorPrimary">#999999</color>
+    <color name="colorPrimaryDark">#706f6f</color>
     <color name="colorAccent">#b1cbe1</color>
     <color name="splash_background">#3B3838</color>
     <color name="button_background">#EEEEEE</color>
@@ -9,4 +9,5 @@
     <color name="button_border">#4F5155</color>
     <color name="button_border_pressed">#333538</color>
     <color name="blue_color">#4242EC</color>
+    <color name="tab_layout_background">#C9C9C9</color>
 </resources>

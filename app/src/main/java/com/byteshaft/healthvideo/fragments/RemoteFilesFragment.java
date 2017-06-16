@@ -343,13 +343,14 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 if (connection != null)
                     connection.disconnect();
             }
-            return sUrl[2];
+            return sUrl[2]+"."+sUrl[1];
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
             mBuilder.setProgress(100, values[0], false);
+            mNotificationManager.notify(id, mBuilder.build());
         }
 
         @Override
@@ -357,6 +358,8 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             super.onPostExecute(s);
             Log.i("TAG", "DONE " + s);
             if (foreground) {
+                LocalFilesFragment.getInstance().readFiles();
+                alreadyExistFiles.add(s);
                 remoteFilesAdapter.notifyDataSetChanged();
             }
             counter++;

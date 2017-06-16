@@ -43,6 +43,8 @@
     <string name="file_already_exist">File already downloaded</string>
     <string name="password_error">Password must contain 6 character</string>
     <string name="check_credentials">Please check login credentials</string>
+    <string name="password_changed">Password changed successfully</string>
+    <string name="change_password">Change password</string>
 
 
     <!--array for language-->

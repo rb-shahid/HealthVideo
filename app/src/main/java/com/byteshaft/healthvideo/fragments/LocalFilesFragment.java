@@ -45,18 +45,29 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     private static final long M = K * K;
     private static final long G = M * K;
     private static final long T = G * K;
+    private static LocalFilesFragment localFilesFragment;
+
+    public static LocalFilesFragment getInstance() {
+        return localFilesFragment;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
+        localFilesFragment = this;
         mBaseView = inflater.inflate(R.layout.local_files_fragment, container, false);
-        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         mListView = (ListView) mBaseView.findViewById(R.id.local_files_list);
         mListView.setOnItemClickListener(this);
+        readFiles();
+        return mBaseView;
+    }
+
+    public void readFiles() {
         toBeDelete = new HashMap<>();
         dataFileArrayList = new ArrayList<>();
         localFileFilesAdapter = new LocalFileFilesAdapter(getActivity().getApplicationContext(), dataFileArrayList);
         mListView.setAdapter(localFileFilesAdapter);
+        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         for (File file: filesArray) {
             Log.i("TAG", file.getAbsolutePath());
@@ -72,7 +83,6 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
             dataFileArrayList.add(dataFile);
             localFileFilesAdapter.notifyDataSetChanged();
         }
-        return mBaseView;
     }
 
     public static String convertToStringRepresentation(final long value){

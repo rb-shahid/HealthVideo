@@ -52,7 +52,7 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                getFragmentManager().popBackStack();
+                onBackPressed();
                 return true;
             default:return false;
         }
@@ -88,19 +88,14 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
     }
 
     private void recoverUserPassword(String oldPass, String newPass) {
-        JSONObject jsonObject1 = new JSONObject();
-        try {
-            jsonObject1.put("oldPassword", oldPass);
-            jsonObject1.put("newPassword", newPass);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
         request = new HttpRequest(this);
         request.setOnReadyStateChangeListener(this);
         request.setOnErrorListener(this);
-        request.open("POST", String.format("%sforgotpassword", AppGlobals.BASE_URL));
-        request.send(jsonObject1.toString());
+        request.open("POST", String.format("%schangePassword?oldPassword=%s&newPassword=%s",
+                AppGlobals.BASE_URL, oldPass, newPass));
+        request.setRequestHeader("authorization",
+                AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
+        request.send();
         Helpers.showProgressDialog(this, "Processing...");
     }
 
@@ -131,7 +126,17 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
                         JSONObject jsonObject = null;
                         try {
                             jsonObject = new JSONObject(request.getResponseText());
-                            if (!jsonObject.isNull("error") && !jsonObject.getBoolean("success")) {
+                            if (jsonObject.isNull("error") && jsonObject.getBoolean("success")) {
+                                Helpers.showSnackBar(findViewById(android.R.id.content),
+                                        getResources().getString(R.string.password_changed));
+                                new android.os.Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        finish();
+                                    }
+                                }, 1000);
+
+                            } else if (!jsonObject.isNull("error") && !jsonObject.getBoolean("success")) {
                                 if (jsonObject.getString("error").equals("BAD_CREDENTIALS")) {
                                     Snackbar.make(findViewById(android.R.id.content),
                                             getResources().getString(R.string.check_credentials), Snackbar.LENGTH_LONG).show();

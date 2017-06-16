@@ -24,6 +24,7 @@ import com.byteshaft.healthvideo.serializers.DataFile;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -58,10 +59,15 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         mListView.setAdapter(localFileFilesAdapter);
         File[] filesArray = files.listFiles();
         for (File file: filesArray) {
+            Log.i("TAG", file.getAbsolutePath());
             String[] onlyFileName = file.getName().split("\\|");
             DataFile dataFile = new DataFile();
             dataFile.setId(Integer.parseInt(onlyFileName[0]));
-            dataFile.setTitle(onlyFileName[1]);
+            String[] fileAndExt = onlyFileName[1].split("\\.");
+            Log.i("TAG", "name " + onlyFileName[1]);
+            Log.i("TAG", "only name " + fileAndExt[0]);
+            dataFile.setTitle(fileAndExt[0]);
+            dataFile.setExtension(fileAndExt[1]);
             dataFile.setSize(convertToStringRepresentation(file.getAbsoluteFile().length()));
             dataFileArrayList.add(dataFile);
             localFileFilesAdapter.notifyDataSetChanged();
@@ -104,6 +110,17 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.delete:
+                for (Map.Entry<Integer,String[]> entry : toBeDelete.entrySet()) {
+                    Integer key = entry.getKey();
+                    String[] value = entry.getValue();
+                    File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+                    File file = new File(files.getAbsoluteFile() + "/" + key+"|"+value[0] +"."+ value[1]);
+                    Log.i("TAG", "to be delete"+ file.getAbsolutePath());
+                    if (file.delete())
+                    dataFileArrayList.remove(Integer.parseInt(value[2]));
+                    localFileFilesAdapter.notifyDataSetChanged();
+                }
+                toBeDelete = new HashMap<>();
 
                 return true;
             default: return false;
@@ -116,13 +133,13 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         DataFile dataFile = dataFileArrayList.get(i);
         String fullFileName = dataFile.getTitle()+"."+dataFile.getExtension();
         if (!toBeDelete.containsKey(dataFile.getId())) {
-            String strings[] = {dataFile.getTitle()};
+            String strings[] = {dataFile.getTitle(), dataFile.getExtension(), String.valueOf(i)};
             toBeDelete.put(dataFile.getId(), strings);
         } else {
             toBeDelete.remove(dataFile.getId());
         }
         localFileFilesAdapter.notifyDataSetChanged();
-        Log.i("TAG", "Download " + toBeDelete);
+        Log.i("TAG", "Deleted " + toBeDelete);
     }
 
     private class LocalFileFilesAdapter extends ArrayAdapter<DataFile> {

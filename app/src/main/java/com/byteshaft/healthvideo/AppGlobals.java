@@ -12,13 +12,14 @@ public class AppGlobals extends Application {
 
     private static Context sContext;
     public static final String KEY_LOGIN = "login";
-    public static final String BASE_URL = "https://testmedic.pessoss.com/api/";
+    public static final String BASE_URL = "https://services.iuiunet.com/api/";
     public static final String KEY_USER_NAME = "user_name";
     public static final String KEY_FIRST_NAME = "first_name";
     public static final String KEY_LAST_NAME = "last_name";
     public static final String KEY_EMAIL = "email";
+    public static final String KEY_TOKEN = "token";
     public static int USER_TYPE = 0;
-
+    public static String sLanguage = "";
 
     @Override
     public void onCreate() {
@@ -52,5 +53,10 @@ public class AppGlobals extends Application {
     public static String getStringFromSharedPreferences(String key) {
         SharedPreferences sharedPreferences = getPreferenceManager();
         return sharedPreferences.getString(key, "");
+    }
+
+    public static void clearSettings() {
+        SharedPreferences sharedPreferences = getPreferenceManager();
+        sharedPreferences.edit().clear().commit();
     }
 }

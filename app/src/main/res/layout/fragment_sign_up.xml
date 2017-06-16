@@ -18,7 +18,7 @@
             android:layout_margin="5dp"
             android:background="@drawable/edittext_background"
             android:hint="@string/enter_first_name"
-            android:inputType="textPersonName"
+            android:inputType="textCapSentences"
             android:padding="10dp" />
 
         <EditText
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/edittext_background"
             android:hint="@string/enter_last_name"
-            android:inputType="textPersonName"
+            android:inputType="textCapSentences"
             android:padding="10dp" />
 
 

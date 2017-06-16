@@ -1,6 +1,8 @@
 package com.byteshaft.healthvideo.accountfragments;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -12,7 +14,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.byteshaft.healthvideo.AppGlobals;
+import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
+import com.byteshaft.healthvideo.utils.Helpers;
+import com.byteshaft.requests.FormData;
 import com.byteshaft.requests.HttpRequest;
 
 import org.json.JSONException;
@@ -68,8 +73,8 @@ public class Login extends Fragment implements View.OnClickListener, HttpRequest
         } else {
             mEmail.setError(null);
         }
-        if (mPasswordString.isEmpty() || mPassword.length() < 4) {
-            mPassword.setError("Enter minimum 4 alphanumeric characters");
+        if (mPasswordString.isEmpty() || mPassword.length() < 6) {
+            mPassword.setError("password must be of 6 characters");
             valid = false;
         } else {
             mPassword.setError(null);
@@ -88,24 +93,15 @@ public class Login extends Fragment implements View.OnClickListener, HttpRequest
     }
 
     private void loginUser(String email, String password) {
+        Helpers.showProgressDialog(getActivity(), "processing...");
+        FormData formData = new FormData();
+        formData.append(FormData.TYPE_CONTENT_TEXT, "email", email);
+        formData.append(FormData.TYPE_CONTENT_TEXT, "password", password);
         request = new HttpRequest(getActivity());
         request.setOnReadyStateChangeListener(this);
         request.setOnErrorListener(this);
         request.open("POST", String.format("%slogin", AppGlobals.BASE_URL));
-        request.send(getUserLoginData(email, password));
-    }
-
-
-    private String getUserLoginData(String email, String password) {
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("email", email);
-            jsonObject.put("password", password);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return jsonObject.toString();
-
+        request.send(formData);
     }
 
     @Override
@@ -130,15 +126,54 @@ public class Login extends Fragment implements View.OnClickListener, HttpRequest
     public void onReadyStateChange(HttpRequest request, int readyState) {
         switch (readyState) {
             case HttpRequest.STATE_DONE:
+                Helpers.dismissProgressDialog();
                 switch (request.getStatus()) {
                     case HttpURLConnection.HTTP_OK:
                         System.out.println(request.getResponseText());
+                        try {
+                            JSONObject jsonObject = new JSONObject(request.getResponseText());
+                            if (jsonObject.isNull("error") && jsonObject.getBoolean("success")) {
+                                JSONObject result = jsonObject.getJSONObject("result");
+                                AppGlobals.saveDataToSharedPreferences(AppGlobals.KEY_TOKEN,
+                                        result.getString("token"));
+                                AppGlobals.saveDataToSharedPreferences(AppGlobals.KEY_USER_NAME,
+                                        result.getString("username"));
+                                AppGlobals.loginState(true);
+                                startActivity(new Intent(getActivity(), MainActivity.class));
+                            } else if (!jsonObject.isNull("error") && !jsonObject.getBoolean("success")) {
+                                if (jsonObject.getString("error").equals("BAD_CREDENTIALS")) {
+                                    Snackbar.make(getView(), "Please check login credentials", Snackbar.LENGTH_LONG).show();
+                                } else if (jsonObject.getString("error").equals("USER_INACTIVE")) {
+                                    Helpers.alertDialog(R.drawable.ic_alert, getActivity(), getResources().getString(R.string.user_inactive),
+                                            getResources().getString(R.string.user_inactive_message));
+                                } else if (jsonObject.getString("error").equals("USER_NOT_FOUND")) {
+                                    Helpers.alertDialog(R.drawable.not_found, getActivity(), getResources().getString(R.string.not_found),
+                                            getResources().getString(R.string.not_found_message));
+                                }
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                 }
         }
     }
 
     @Override
     public void onError(HttpRequest request, int readyState, short error, Exception exception) {
+        Helpers.dismissProgressDialog();
+        switch (readyState) {
+            case HttpRequest.ERROR_CONNECTION_TIMED_OUT:
+                Helpers.showSnackBar(getView(), getResources().getString(R.string.connection_time_out));
+                break;
+            case HttpRequest.ERROR_NETWORK_UNREACHABLE:
+                Helpers.showSnackBar(getView(), exception.getLocalizedMessage());
+                break;
+            case HttpRequest.ERROR_SSL_CERTIFICATE_INVALID:
+                Helpers.showSnackBar(getView(), getResources().getString(R.string.hand_shake_error));
+
+
+        }
 
     }
 

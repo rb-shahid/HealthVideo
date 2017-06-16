@@ -25,6 +25,18 @@
     <string name="register"><u>Register</u></string>
     <string name="enter_first_name">First name</string>
     <string name="enter_last_name">Last name</string>
+    <string name="permission_granted">permission granted</string>
+    <string name="permission_denied">permission denied</string>
+    <string name="grant_permission">Device id is required for registration, please grant permission</string>
+    <string name="connection_time_out">Connection time out please try again</string>
+    <string name="hand_shake_error">please try again</string>
+    <string name="support">Support</string>
+    <string name="support_message">​ If you have a problem using the app please send SMS to <font color='#FF7F27'>+923448797786</font> or email to <b>Test@test.com</b></string>
+    <string name="created_account_successfully">Account created successfully</string>
+    <string name="user_inactive">User Inactive</string>
+    <string name="user_inactive_message">please visit your registered email and activate your account</string>
+    <string name="not_found">Account not found</string>
+    <string name="not_found_message">No account associated with this email address, Please register.</string>
 
 
     <!--array for language-->

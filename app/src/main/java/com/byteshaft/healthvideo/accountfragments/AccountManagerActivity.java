@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.byteshaft.healthvideo.AppGlobals;
+import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.SplashScreen;
 
@@ -30,6 +31,11 @@ public class AccountManagerActivity extends AppCompatActivity {
         if (SplashScreen.getInstance() != null) {
             SplashScreen.getInstance().finish();
         }
+
+        if (MainActivity.getInstance() != null) {
+            MainActivity.getInstance().finish();
+        }
+
         if (!AppGlobals.isLogin()) {
             loadFragment(new Login());
         }

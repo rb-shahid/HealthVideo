@@ -10,14 +10,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
+import com.byteshaft.healthvideo.utils.Helpers;
 import com.byteshaft.requests.HttpRequest;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.net.HttpURLConnection;
 
@@ -57,10 +54,7 @@ public class ForgotPassword extends Fragment implements View.OnClickListener, Ht
 
     public boolean validate() {
         boolean valid = true;
-
         mEmailString = mEmail.getText().toString();
-
-        System.out.println(mEmailString);
 
         if (mEmailString.trim().isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(mEmailString).matches()) {
             mEmail.setError("please provide a valid email");
@@ -82,50 +76,49 @@ public class ForgotPassword extends Fragment implements View.OnClickListener, Ht
         }
     }
 
-    @Override
-    public void onReadyStateChange(HttpRequest request, int readyState) {
-        switch (readyState) {
-            case HttpRequest.STATE_DONE:
-                switch (request.getStatus()) {
-                    case HttpURLConnection.HTTP_OK:
-                        System.out.println(request.getResponseText() + "working ");
-                        Toast.makeText(getActivity(), "Please check your Email for new password", Toast.LENGTH_LONG).show();
-                        loadFragment(new ResetPassword());
-                        break;
-                }
-        }
-
-    }
-
     public void loadFragment(Fragment fragment) {
         FragmentTransaction tx = getFragmentManager().beginTransaction();
         tx.replace(R.id.container, fragment);
         tx.commit();
     }
 
-    @Override
-    public void onError(HttpRequest request, int readyState, short error, Exception exception) {
-
-    }
 
     private void recoverUserPassword(String email) {
         request = new HttpRequest(getActivity());
         request.setOnReadyStateChangeListener(this);
         request.setOnErrorListener(this);
-        request.open("POST", String.format("%sforgot-password", AppGlobals.BASE_URL));
-        request.send(getUserPassword(email));
+        request.open("GET", String.format("%sforgotpassword?email="+email, AppGlobals.BASE_URL));
+        request.send();
+        Helpers.showProgressDialog(getActivity(), "Processing...");
+    }
+
+    @Override
+    public void onError(HttpRequest request, int readyState, short error, Exception exception) {
+        Helpers.dismissProgressDialog();
+        switch (readyState) {
+            case HttpRequest.ERROR_CONNECTION_TIMED_OUT:
+                Helpers.showSnackBar(getView(), getResources().getString(R.string.connection_time_out));
+                break;
+            case HttpRequest.ERROR_NETWORK_UNREACHABLE:
+                Helpers.showSnackBar(getView(), exception.getLocalizedMessage());
+                break;
+            case HttpRequest.ERROR_SSL_CERTIFICATE_INVALID:
+                Helpers.showSnackBar(getView(), getResources().getString(R.string.hand_shake_error));
+        }
 
     }
 
-
-    private String getUserPassword(String email) {
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("email", email);
-        } catch (JSONException e) {
-            e.printStackTrace();
+    @Override
+    public void onReadyStateChange(HttpRequest request, int readyState) {
+        switch (readyState) {
+            case HttpRequest.STATE_DONE:
+                Helpers.dismissProgressDialog();
+                switch (request.getStatus()) {
+                    case HttpURLConnection.HTTP_OK:
+                        System.out.println(request.getResponseText());
+                        break;
+                }
         }
-        return jsonObject.toString();
 
     }
 

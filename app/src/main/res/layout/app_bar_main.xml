@@ -21,8 +21,7 @@
 
         <android.support.design.widget.TabLayout
             android:id="@+id/tabs"
-            app:tabBackground="@color/tab_layout_background"
-            android:background="@color/tab_layout_background"
+            app:tabBackground="@drawable/tab_background"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 

@@ -37,6 +37,9 @@
     <string name="user_inactive_message">please visit your registered email and activate your account</string>
     <string name="not_found">Account not found</string>
     <string name="not_found_message">No account associated with this email address, Please register.</string>
+    <string name="loading_videos">Loading Remote Files</string>
+    <string name="action_download">Download</string>
+    <string name="action_delete">Delete</string>
 
 
     <!--array for language-->

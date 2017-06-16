@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <com.byteshaft.healthvideo.radar.RadarScanView
+        android:id="@+id/scan_view"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:background="@color/button_background"/>
+
+    <com.byteshaft.healthvideo.radar.RandomTextView
+        android:id="@+id/random_textview"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_centerInParent="true">
+
+    </com.byteshaft.healthvideo.radar.RandomTextView>
+
+    <TextView
+        android:id="@+id/state"
+        android:text="Not Connected"
+        android:gravity="center"
+        android:layout_below="@+id/scan_view"
+        android:textColor="@android:color/holo_red_dark"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_below="@+id/state"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send Test" />
+
+
+
+</RelativeLayout>

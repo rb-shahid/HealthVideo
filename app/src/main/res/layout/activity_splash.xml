@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/splash_background">
+
+    <android.support.v7.widget.AppCompatSpinner
+        android:id="@+id/spinner"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="30dp"
+        android:padding="5dp"
+        android:background="@drawable/spinner_background"
+        android:layout_alignParentTop="true"
+        android:popupBackground="@color/colorAccent"
+        android:entries="@array/language_array"/>
+
+    <LinearLayout
+        android:id="@+id/buttons_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true">
+
+        <ImageButton
+            android:layout_gravity="center"
+            android:id="@+id/aid_worker"
+            android:layout_margin="20dp"
+            android:background="@color/splash_background"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_connection"/>
+
+
+        <ImageButton
+            android:layout_gravity="center"
+            android:id="@+id/nurse"
+            android:background="@color/splash_background"
+            android:layout_margin="20dp"
+            android:src="@mipmap/ic_nurse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/question_mark"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/buttons_layout"
+        android:background="@mipmap/ic_question_two"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="5dp"/>
+
+</RelativeLayout>

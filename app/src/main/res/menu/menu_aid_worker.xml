@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single"
+        android:id="@+id/account">
+        <item android:title="Account">
+            <menu>
+                <item
+                    android:id="@+id/nav_username"
+                    android:title="Username" />
+                <item
+                    android:id="@+id/nav_logout"
+                    android:title="Logout" />
+                <item
+                    android:id="@+id/nav_change_password"
+                    android:title="Change password" />
+            </menu>
+        </item>
+    </group>
+
+    <group android:checkableBehavior="single"
+        android:id="@+id/connectivity">
+        <item android:title="Connectivity">
+            <menu>
+                <item
+                    android:id="@+id/nav_wifi_connection"
+                    android:title="Wi-fi connection" />
+                <item
+                    android:id="@+id/nav_sync"
+                    android:title="Sync data" />
+            </menu>
+        </item>
+    </group>
+
+    <group android:checkableBehavior="single"
+        android:id="@+id/support">
+        <item
+            android:id="@+id/nav_support"
+            android:title="Support" />
+        <item
+            android:id="@+id/nav_privacy_policy"
+            android:title="Privacy policy" />
+    </group>
+
+
+</menu>

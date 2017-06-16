@@ -2,7 +2,6 @@ package com.byteshaft.healthvideo.accountfragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -74,12 +73,6 @@ public class ForgotPassword extends Fragment implements View.OnClickListener, Ht
                 }
                 break;
         }
-    }
-
-    public void loadFragment(Fragment fragment) {
-        FragmentTransaction tx = getFragmentManager().beginTransaction();
-        tx.replace(R.id.container, fragment);
-        tx.commit();
     }
 
 

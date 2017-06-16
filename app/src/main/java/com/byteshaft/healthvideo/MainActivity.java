@@ -12,6 +12,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -22,6 +23,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import com.byteshaft.healthvideo.accountfragments.AccountManagerActivity;
+import com.byteshaft.healthvideo.accountfragments.ChangePassword;
 import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
 import com.byteshaft.healthvideo.radar.WifiDirectActivity;
@@ -127,12 +129,22 @@ public class MainActivity extends AppCompatActivity
             });
             alertDialog = alertDialogBuilder.create();
             alertDialog.show();
+        } else if (id == R.id.nav_change_password) {
+            startActivity(new Intent(getApplicationContext(), ChangePassword.class));
         }
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void loadFragment(Fragment fragment) {
+        String backStateName = fragment.getClass().getName();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.enter, R.anim.exit, R.anim.pop_enter, R.anim.pop_exit);
+        fragmentTransaction.replace(R.id.container, fragment, backStateName);
+        fragmentTransaction.commit();
     }
 
     /**

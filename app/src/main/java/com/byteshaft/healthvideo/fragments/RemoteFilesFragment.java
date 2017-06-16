@@ -1,10 +1,12 @@
 package com.byteshaft.healthvideo.fragments;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -61,12 +63,17 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     private int counter = 0;
     private ArrayList<Integer> downloadingNow;
     private boolean foreground = false;
+    private int id = 1001;
+    private NotificationManager mNotificationManager;
+    private NotificationCompat.Builder  mBuilder;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         remoteFileArrayList = new ArrayList<>();
         toBeDownload = new HashMap<>();
+        mNotificationManager =
+                (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
         alreadyExistFiles = new ArrayList<>();
         directory = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         downloadAbleUrl = new ArrayList<>();
@@ -119,6 +126,13 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 if (toBeDownload.size() > 0) {
                     counter = 0;
                     String[] strings = toBeDownload.get(downloadingNow.get(counter));
+                    mBuilder = new NotificationCompat.Builder(getActivity().getApplicationContext());
+                    mBuilder.setContentInfo("Download...")
+                            .setContentText("Download in progress")
+                            .setAutoCancel(false)
+                            .setSmallIcon(R.mipmap.ic_launcher_round);
+                    mBuilder.setProgress(100, 0, false);
+                    mNotificationManager.notify(id, mBuilder.build());
                     new DownloadTask().execute(strings);
                 }
                 return true;
@@ -333,6 +347,12 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         }
 
         @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            mBuilder.setProgress(100, values[0], false);
+        }
+
+        @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             Log.i("TAG", "DONE " + s);
@@ -343,6 +363,8 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             if (counter < downloadingNow.size()) {
                 String[] strings = toBeDownload.get(downloadingNow.get(counter));
                 new DownloadTask().execute(strings);
+            } else {
+                mNotificationManager.cancel(id);
             }
         }
     }

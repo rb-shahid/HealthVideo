@@ -36,6 +36,8 @@
             android:theme="@style/AppTheme.AccentColor"/>
         <activity android:name=".radar.WifiDirectActivity"
             android:screenOrientation="portrait"/>
+        <activity android:name=".accountfragments.ChangePassword"
+            android:screenOrientation="portrait"/>
 
     </application>
 

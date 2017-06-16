@@ -142,7 +142,7 @@ public class Login extends Fragment implements View.OnClickListener, HttpRequest
                                 startActivity(new Intent(getActivity(), MainActivity.class));
                             } else if (!jsonObject.isNull("error") && !jsonObject.getBoolean("success")) {
                                 if (jsonObject.getString("error").equals("BAD_CREDENTIALS")) {
-                                    Snackbar.make(getView(), "Please check login credentials", Snackbar.LENGTH_LONG).show();
+                                    Snackbar.make(getView(), getResources().getString(R.string.check_credentials), Snackbar.LENGTH_LONG).show();
                                 } else if (jsonObject.getString("error").equals("USER_INACTIVE")) {
                                     Helpers.alertDialog(R.drawable.ic_alert, getActivity(), getResources().getString(R.string.user_inactive),
                                             getResources().getString(R.string.user_inactive_message));

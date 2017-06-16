@@ -12,7 +12,7 @@
     <string name="forgot_password">Forgot Password</string>
     <string name="enter_email">Enter Email</string>
     <string name="email">Email</string>
-    <string name="recover">Recover</string>
+    <string name="recover">submit</string>
     <string name="old_password">Enter Old password</string>
     <string name="new_password">Enter New password</string>
     <string name="reset">Reset</string>
@@ -41,6 +41,8 @@
     <string name="action_download">Download</string>
     <string name="action_delete">Delete</string>
     <string name="file_already_exist">File already downloaded</string>
+    <string name="password_error">Password must contain 6 character</string>
+    <string name="check_credentials">Please check login credentials</string>
 
 
     <!--array for language-->

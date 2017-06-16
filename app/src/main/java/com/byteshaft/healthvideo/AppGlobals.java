@@ -20,6 +20,7 @@ public class AppGlobals extends Application {
     public static final String KEY_TOKEN = "token";
     public static int USER_TYPE = 0;
     public static String sLanguage = "";
+    public static final String INTERNAL = "internal";
 
     @Override
     public void onCreate() {

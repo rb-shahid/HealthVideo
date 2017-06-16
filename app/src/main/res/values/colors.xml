@@ -10,6 +10,9 @@
     <color name="button_border_pressed">#333538</color>
     <color name="blue_color">#4242EC</color>
     <color name="tab_layout_background">#C9C9C9</color>
+    <color name="highlighted">#FFF2CC</color>
+    <color name="already_existing_files">#8E8E8E</color>
+    <color name="already_exist_file_background">#EEEEEE</color>
 
 
 </resources>

@@ -30,9 +30,8 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
     private EditText newPassword;
     private Button mRecoverButton;
     private String mPasswordString;
-    private String mNewPassowrdString;
+    private String mNewPasswordString;
     private HttpRequest request;
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,12 +61,12 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
     public boolean validate() {
         boolean valid = true;
         mPasswordString = oldPassword.getText().toString();
-        mNewPassowrdString = newPassword.getText().toString();
-        if (mPasswordString.length() < 6 || mNewPassowrdString.length() < 6) {
+        mNewPasswordString = newPassword.getText().toString();
+        if (mPasswordString.length() < 6 || mNewPasswordString.length() < 6) {
             Helpers.showSnackBar(findViewById(android.R.id.content), getResources().getString(R.string.password_error));
             valid = false;
         }
-        if (mPasswordString.trim().isEmpty() || mNewPassowrdString.trim().isEmpty()) {
+        if (mPasswordString.trim().isEmpty() || mNewPasswordString.trim().isEmpty()) {
             oldPassword.setError("please provide a valid email");
             valid = false;
         } else {
@@ -81,7 +80,7 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
         switch (view.getId()) {
             case R.id.change_password:
                 if (validate()) {
-                    recoverUserPassword(mPasswordString, mNewPassowrdString);
+                    recoverUserPassword(mPasswordString, mNewPasswordString);
                 }
                 break;
         }

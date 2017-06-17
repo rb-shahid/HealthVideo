@@ -15,7 +15,6 @@ import android.widget.TextView;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
-import com.byteshaft.healthvideo.serializers.Message;
 import com.byteshaft.healthvideo.utils.WifiReceiver;
 import com.peak.salut.Callbacks.SalutCallback;
 import com.peak.salut.Callbacks.SalutDataCallback;
@@ -24,8 +23,6 @@ import com.peak.salut.Salut;
 import com.peak.salut.SalutDataReceiver;
 import com.peak.salut.SalutDevice;
 import com.peak.salut.SalutServiceData;
-
-import java.util.Vector;
 
 import static android.R.attr.shadowColor;
 
@@ -55,7 +52,7 @@ public class WifiDirectActivity extends AppCompatActivity implements SalutDataCa
         instance = this;
         if (AppGlobals.USER_TYPE == 1) {
             setContentView(R.layout.wifi_connection_aid_worker_ui);
-            aidWorkerSendButton = (Button) findViewById(R.id.button);
+//            aidWorkerSendButton = (Button) findViewById(R.id.button);
             aidWorkerSendButton.setOnClickListener(this);
         } else {
             setContentView(R.layout.wifi_connection_nurse_ui);
@@ -83,48 +80,47 @@ public class WifiDirectActivity extends AppCompatActivity implements SalutDataCa
             }
         });
         if (AppGlobals.USER_TYPE == 1) {
-            aidWorkerSendButton.setEnabled(false);
             final RandomTextView randomTextView = (RandomTextView) findViewById(
                     R.id.random_textview);
-            randomTextView.setOnRippleViewClickListener(
-                    new RandomTextView.OnRippleViewClickListener() {
-                        @Override
-                        public void onRippleViewClicked(final SalutDevice salutDevice) {
-                            receiverDevice = salutDevice;
-                            network.registerWithHost(salutDevice, new SalutCallback() {
-                                @Override
-                                public void call() {
-                                    Log.d("TAG", "We're now registered.");
-                                    state.setText("Connected :" + salutDevice.deviceName);
-                                    state.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-                                    aidWorkerSendButton.setEnabled(true);
-                                    Snackbar.make(findViewById(android.R.id.content), "Connected!",
-                                            Snackbar.LENGTH_SHORT).show();
-
-                                }
-                            }, new SalutCallback() {
-                                @Override
-                                public void call() {
-                                    Vector<String> strings = randomTextView.getKeyWords();
-                                    for (String string : strings) {
-                                        randomTextView.removeKeyWord(string);
-                                    }
-                                    Log.d("TAG", "We failed to register.");
-                                    state.setText("Not Connected");
-                                    state.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-                                    Snackbar.make(findViewById(android.R.id.content), "Connection failed!", Snackbar.LENGTH_SHORT).show();
-                                }
-                            });
-//                            startActivity(new Intent(getApplicationContext(), .class));
-
-                        }
-                    });
+//            randomTextView.setOnRippleViewClickListener(
+//                    new RandomTextView.OnRippleViewClickListener() {
+//                        @Override
+//                        public void onRippleViewClicked(final SalutDevice salutDevice) {
+//                            receiverDevice = salutDevice;
+//                            network.registerWithHost(salutDevice, new SalutCallback() {
+//                                @Override
+//                                public void call() {
+//                                    Log.d("TAG", "We're now registered.");
+//                                    state.setText("Connected :" + salutDevice.deviceName);
+//                                    state.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+//                                    aidWorkerSendButton.setEnabled(true);
+//                                    Snackbar.make(findViewById(android.R.id.content), "Connected!",
+//                                            Snackbar.LENGTH_SHORT).show();
+//
+//                                }
+//                            }, new SalutCallback() {
+//                                @Override
+//                                public void call() {
+//                                    Vector<String> strings = randomTextView.getKeyWords();
+//                                    for (String string : strings) {
+//                                        randomTextView.removeKeyWord(string);
+//                                    }
+//                                    Log.d("TAG", "We failed to register.");
+//                                    state.setText("Not Connected");
+//                                    state.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+//                                    Snackbar.make(findViewById(android.R.id.content), "Connection failed!", Snackbar.LENGTH_SHORT).show();
+//                                }
+//                            });
+////                            startActivity(new Intent(getApplicationContext(), .class));
+//
+//                        }
+//                    });
 
             network.discoverNetworkServices(new SalutDeviceCallback() {
 
                 @Override
                 public void call(SalutDevice device) {
-                    randomTextView.addKeyWord(device.deviceName.split("_")[0], device);
+//                    randomTextView.addKeyWord(device.deviceName.split("_")[0], device);
                     randomTextView.show();
                     Log.d("TAG", "A device has found with the name " + device.deviceName);
 
@@ -213,19 +209,19 @@ public class WifiDirectActivity extends AppCompatActivity implements SalutDataCa
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.button:
-                Message message = new Message();
-                message.description = "This is a test";
-                network.sendToHost(message, new SalutCallback() {
-
-
-
-                    @Override
-                    public void call() {
-                        Log.e("TAG", "Oh no! The data failed to send.");
-                    }
-                });
-                break;
+//            case R.id.button:
+//                Message message = new Message();
+//                message.description = "This is a test";
+//                network.sendToHost(message, new SalutCallback() {
+//
+//
+//
+//                    @Override
+//                    public void call() {
+//                        Log.e("TAG", "Oh no! The data failed to send.");
+//                    }
+//                });
+//                break;
         }
     }
 }

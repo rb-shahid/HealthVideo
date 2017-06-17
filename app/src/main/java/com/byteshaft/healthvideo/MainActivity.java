@@ -25,9 +25,11 @@ import android.view.MenuItem;
 
 import com.byteshaft.healthvideo.accountfragments.AccountManagerActivity;
 import com.byteshaft.healthvideo.accountfragments.ChangePassword;
+import com.byteshaft.healthvideo.fragments.Local;
 import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
-import com.byteshaft.healthvideo.radar.WifiDirectActivity;
+import com.byteshaft.healthvideo.fragments.Server;
+import com.byteshaft.healthvideo.wifi.WifiActivity;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -107,7 +109,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_wifi_connection) {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wifiManager.isWifiEnabled()) {
-                startActivity(new Intent(getApplicationContext(), WifiDirectActivity.class));
+                startActivity(new Intent(getApplicationContext(), WifiActivity.class));
             } else {
                 Snackbar.make(findViewById(android.R.id.content), "Wifi Disabled!", Snackbar.LENGTH_SHORT).show();
             }
@@ -163,12 +165,24 @@ public class MainActivity extends AppCompatActivity
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            switch (position) {
-                case 0:
-                    return new LocalFilesFragment();
-                case 1:
-                    return new RemoteFilesFragment();
-                default: return new LocalFilesFragment();
+            if (AppGlobals.isLogin() && AppGlobals.USER_TYPE == 1) {
+                switch (position) {
+                    case 0:
+                        return new LocalFilesFragment();
+                    case 1:
+                        return new RemoteFilesFragment();
+                    default:
+                        return new LocalFilesFragment();
+                }
+            } else {
+                switch (position) {
+                    case 0:
+                        return new Local();
+                    case 1:
+                        return new Server();
+                    default:
+                        return new Local();
+                }
             }
         }
 

@@ -74,18 +74,18 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         toBeDownload = new HashMap<>();
         mNotificationManager =
                 (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-        alreadyExistFiles = new ArrayList<>();
         directory = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         downloadAbleUrl = new ArrayList<>();
         mBaseView = inflater.inflate(R.layout.remote_files_fragment, container, false);
         mListView = (ListView) mBaseView.findViewById(R.id.remote_files_list);
         mListView.setOnItemClickListener(this);
-        remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
-        mListView.setAdapter(remoteFilesAdapter);
         getRemoteFiles();
         File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         Log.i("TAG", "size " + filesArray.length);
+        alreadyExistFiles = new ArrayList<>();
+        remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
+        mListView.setAdapter(remoteFilesAdapter);
         for (File file: filesArray) {
             Log.i("TAG", "name " + file.getName());
             String[] onlyFileName = file.getName().split("\\|");
@@ -128,9 +128,9 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                     String[] strings = toBeDownload.get(downloadingNow.get(counter));
                     mBuilder = new NotificationCompat.Builder(getActivity().getApplicationContext());
                     mBuilder.setContentInfo("Download...")
-                            .setContentText("Download in progress")
+                            .setContentText("Downloading: "+capitalizeLetter(strings[2]))
                             .setAutoCancel(false)
-                            .setSmallIcon(R.mipmap.ic_launcher_round);
+                            .setSmallIcon(R.drawable.downlaod);
                     mBuilder.setProgress(100, 0, false);
                     mNotificationManager.notify(id, mBuilder.build());
                     new DownloadTask().execute(strings);
@@ -139,6 +139,10 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             default:
                 return false;
         }
+    }
+
+    private String capitalizeLetter(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
     private void getRemoteFiles() {
@@ -366,6 +370,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             if (counter < downloadingNow.size()) {
                 String[] strings = toBeDownload.get(downloadingNow.get(counter));
                 new DownloadTask().execute(strings);
+                mBuilder.setContentText("Downloading: "+capitalizeLetter(strings[2]));
             } else {
                 mNotificationManager.cancel(id);
             }

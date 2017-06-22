@@ -21,6 +21,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 
 import com.byteshaft.healthvideo.accountfragments.AccountManagerActivity;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity
             R.drawable.user,
             R.drawable.connection
     };
+    public MenuItem backItem;
 
     public static MainActivity getInstance() {
         return instance;
@@ -51,9 +53,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         instance = this;
-        if (SplashScreen.getInstance() != null) {
-            SplashScreen.getInstance().finish();
-        }
         if (AccountManagerActivity.getInstance() != null) {
             AccountManagerActivity.getInstance().finish();
         }
@@ -97,6 +96,23 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        backItem = menu.findItem(R.id.action_back_press);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_back_press:
+                onBackPressed();
+                return true;
+            default: return false;
         }
     }
 

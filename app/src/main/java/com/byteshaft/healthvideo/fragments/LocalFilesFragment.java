@@ -18,6 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.byteshaft.healthvideo.AppGlobals;
+import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
 
@@ -46,6 +47,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     private static final long G = M * K;
     private static final long T = G * K;
     private static LocalFilesFragment localFilesFragment;
+    private MenuItem deleteMenu;
 
     public static LocalFilesFragment getInstance() {
         return localFilesFragment;
@@ -114,6 +116,8 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.delete, menu);
+        deleteMenu = menu.findItem(R.id.delete);
+        deleteMenu.setVisible(false);
     }
 
     @Override
@@ -147,6 +151,13 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
             toBeDelete.put(dataFile.getId(), strings);
         } else {
             toBeDelete.remove(dataFile.getId());
+        }
+        if (toBeDelete.size() > 0) {
+            deleteMenu.setVisible(true);
+            MainActivity.getInstance().backItem.setVisible(false);
+        } else {
+            deleteMenu.setVisible(false);
+            MainActivity.getInstance().backItem.setVisible(true);
         }
         localFileFilesAdapter.notifyDataSetChanged();
         Log.i("TAG", "Deleted " + toBeDelete);

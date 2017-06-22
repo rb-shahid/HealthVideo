@@ -21,6 +21,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.byteshaft.healthvideo.AppGlobals;
+import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.utils.Helpers;
@@ -66,6 +67,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     private int id = 1001;
     private NotificationManager mNotificationManager;
     private NotificationCompat.Builder  mBuilder;
+    private MenuItem saveMenuItem;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -112,6 +114,8 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.download, menu);
+        saveMenuItem = menu.findItem(R.id.download);
+        saveMenuItem.setVisible(false);
     }
 
     @Override
@@ -215,6 +219,15 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         } else {
             toBeDownload.remove(dataFile.getId());
         }
+        Log.i("TAG", "download size " + toBeDownload.size());
+        Log.i("TAG", "download size " + toBeDownload);
+        if (toBeDownload.size() > 0) {
+            saveMenuItem.setVisible(true);
+            MainActivity.getInstance().backItem.setVisible(false);
+        } else {
+            saveMenuItem.setVisible(false);
+            MainActivity.getInstance().backItem.setVisible(true);
+        }
         remoteFilesAdapter.notifyDataSetChanged();
         Log.i("TAG", "Download " + toBeDownload);
     }
@@ -245,9 +258,9 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(dataFile.getId());
             stringBuilder.append(SPACE);
-            if (dataFile.getTitle().length() > 15) {
+            if (dataFile.getTitle().length() > 25) {
                 String bigString = dataFile.getTitle().substring(0, Math.min(
-                        dataFile.getTitle().length(), 13));
+                        dataFile.getTitle().length(), 25));
                 stringBuilder.append(DOTS);
                 stringBuilder.append(bigString);
                 stringBuilder.append(SPACE);

@@ -20,7 +20,8 @@
 
     <group android:checkableBehavior="single"
         android:id="@+id/connectivity">
-        <item android:title="Connectivity">
+        <item android:id="@+id/connectivity_item" android:title="Connectivity"
+            >
             <menu>
                 <item
                     android:id="@+id/nav_wifi_connection"

@@ -3,6 +3,7 @@ package com.byteshaft.healthvideo;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +21,8 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,6 +33,7 @@ import com.byteshaft.healthvideo.fragments.Local;
 import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
+import com.byteshaft.healthvideo.utils.CustomTypefaceSpan;
 import com.byteshaft.healthvideo.wifi.WifiActivity;
 
 public class MainActivity extends AppCompatActivity
@@ -81,6 +85,11 @@ public class MainActivity extends AppCompatActivity
             navigationView.inflateMenu(R.menu.menu_aid_worker);
             MenuItem menuItem = navigationView.getMenu().findItem(R.id.nav_username);
             menuItem.setTitle(AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_USER_NAME));
+            MenuItem connectivity = navigationView.getMenu().findItem(R.id.connectivity_item);
+            Typeface font = Typeface.create("sans-serif-thin", Typeface.NORMAL);
+            SpannableString mNewTitle = new SpannableString(connectivity.getTitle());
+            mNewTitle.setSpan(font, 0 , mNewTitle.length(),  Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            connectivity.setTitle(mNewTitle);
             /// Doctor's Navigation items
         } else {
             navigationView.inflateMenu(R.menu.menu_nurse);
@@ -103,7 +112,21 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         backItem = menu.findItem(R.id.action_back_press);
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem mi = menu.getItem(i);
+            switch (mi.getItemId()) {
+                case R.id.connectivity_item:
+                    applyFontToMenuItem(mi, Typeface.DEFAULT_BOLD);
+                    break;
+            }
+        }
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void applyFontToMenuItem(MenuItem mi, Typeface font) {
+        SpannableString mNewTitle = new SpannableString(mi.getTitle());
+        mNewTitle.setSpan(new CustomTypefaceSpan("", font), 0, mNewTitle.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        mi.setTitle(mNewTitle);
     }
 
     @Override

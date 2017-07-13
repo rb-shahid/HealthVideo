@@ -64,6 +64,12 @@ public class SignUp extends Fragment implements View.OnClickListener,
         mPassword = (EditText) mBaseView.findViewById(R.id.password_edit_text);
         mVerifyPassword = (EditText) mBaseView.findViewById(R.id.verify_password_edit_text);
         mSignUpButton = (Button) mBaseView.findViewById(R.id.sign_up_button);
+        firstName.setTypeface(AppGlobals.normalTypeFace);
+        lastName.setTypeface(AppGlobals.normalTypeFace);
+        mEmail.setTypeface(AppGlobals.normalTypeFace);
+        mPassword.setTypeface(AppGlobals.normalTypeFace);
+        mVerifyPassword.setTypeface(AppGlobals.normalTypeFace);
+        mSignUpButton.setTypeface(AppGlobals.normalTypeFace);
         askPermission();
 
         mSignUpButton.setOnClickListener(this);

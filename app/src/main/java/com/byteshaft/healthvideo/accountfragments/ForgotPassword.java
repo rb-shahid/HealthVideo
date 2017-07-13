@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
@@ -25,6 +26,7 @@ public class ForgotPassword extends Fragment implements View.OnClickListener, Ht
     private Button mRecoverButton;
     private String mEmailString;
     private HttpRequest request;
+    private TextView forgetPassword;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -34,7 +36,11 @@ public class ForgotPassword extends Fragment implements View.OnClickListener, Ht
         setHasOptionsMenu(true);
         mEmail = (EditText) mBaseView.findViewById(R.id.email_edit_text);
         mRecoverButton = (Button) mBaseView.findViewById(R.id.button_recover);
+        forgetPassword = (TextView) mBaseView.findViewById(R.id.text_change_password);
         mRecoverButton.setOnClickListener(this);
+        mEmail.setTypeface(AppGlobals.normalTypeFace);
+        mRecoverButton.setTypeface(AppGlobals.normalTypeFace);
+        forgetPassword.setTypeface(AppGlobals.normalTypeFace);
         mEmail.setText(AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_EMAIL));
         mEmailString = AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_EMAIL);
         return mBaseView;

@@ -78,7 +78,6 @@ public class MainActivity extends AppCompatActivity
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
             tabLayout.getTabAt(i).setIcon(icons[i]);
         }
-
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -114,16 +113,15 @@ public class MainActivity extends AppCompatActivity
             for (int i=0;i<m.size();i++) {
                 MenuItem mi = m.getItem(i);
 
-//                for aapplying a font to subMenu ...
                 SubMenu subMenu = mi.getSubMenu();
                 if (subMenu!=null && subMenu.size() >0 ) {
                     for (int j=0; j <subMenu.size();j++) {
                         MenuItem subMenuItem = subMenu.getItem(j);
-                        applyFontToMenuItem(subMenuItem, Typeface.SERIF);
+                        applyFontToMenuItem(subMenuItem, AppGlobals.normalTypeFace);
                     }
                 }
                 //the method we have create in activity
-                applyFontToMenuItem(mi, Typeface.SERIF);
+                applyFontToMenuItem(mi, AppGlobals.moreBold);
             }
             /// Doctor's Navigation items
         } else {

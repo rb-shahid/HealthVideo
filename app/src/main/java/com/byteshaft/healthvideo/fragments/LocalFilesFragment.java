@@ -196,6 +196,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
             } else {
                 viewHolder = (ViewHolder) convertView.getTag();
             }
+            viewHolder.fileName.setTypeface(AppGlobals.normalTypeFace);
             DataFile dataFile = arrayList.get(position);
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(dataFile.getId());
@@ -229,7 +230,8 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                 @Override
                 public void onClick(View view) {
                     DataFile dataFile = arrayList.get(position);
-                    if (dataFile.getExtension().equals("3gp")) {
+                    if (dataFile.getExtension().equals("3gp") || dataFile.getExtension().equals("mp4") ||
+                            dataFile.getExtension().equals("mkv") || dataFile.getExtension().equals("mov")) {
                         Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
                         intent.putExtra("path", dataFile.getUrl());
                         startActivity(intent);

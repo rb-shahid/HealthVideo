@@ -49,6 +49,11 @@ public class Login extends Fragment implements View.OnClickListener, HttpRequest
         mLoginButton = (Button) mBaseView.findViewById(R.id.button_login);
         mSignUpTextView = (TextView) mBaseView.findViewById(R.id.sign_up_text_view);
         forgotPasswordTextView = (TextView) mBaseView.findViewById(R.id.forgot_password);
+        mEmail.setTypeface(AppGlobals.normalTypeFace);
+        mPassword.setTypeface(AppGlobals.normalTypeFace);
+        mLoginButton.setTypeface(AppGlobals.normalTypeFace);
+        mSignUpTextView.setTypeface(AppGlobals.normalTypeFace);
+        forgotPasswordTextView.setTypeface(AppGlobals.normalTypeFace);
         mLoginButton.setOnClickListener(this);
         forgotPasswordTextView.setOnClickListener(this);
         mSignUpTextView.setOnClickListener(this);

@@ -3,6 +3,7 @@ package com.byteshaft.healthvideo;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 
 /**
  * Created by s9iper1 on 6/10/17.
@@ -21,11 +22,18 @@ public class AppGlobals extends Application {
     public static int USER_TYPE = 0;
     public static String sLanguage = "";
     public static final String INTERNAL = "internal";
+    public static Typeface boldTypeFace;
+    public static Typeface normalTypeFace;
+    public static Typeface moreBold;
 
     @Override
     public void onCreate() {
         super.onCreate();
         sContext = getApplicationContext();
+        boldTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/bold.ttf");
+        normalTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/simple.ttf");
+        moreBold = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/more_bold.ttf");
+
     }
 
     public static Context getContext() {

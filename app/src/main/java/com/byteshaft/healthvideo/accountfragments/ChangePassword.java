@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
@@ -32,6 +33,7 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
     private String mPasswordString;
     private String mNewPasswordString;
     private HttpRequest request;
+    private TextView forgetPassword;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,10 +43,16 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
                 .setTitle(getResources().getString(R.string.forgot_password));
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        forgetPassword = (TextView) findViewById(R.id.text_change_password);
         oldPassword = (EditText) findViewById(R.id.old_password);
         newPassword = (EditText) findViewById(R.id.new_password);
         mRecoverButton = (Button) findViewById(R.id.change_password);
         mRecoverButton.setOnClickListener(this);
+        oldPassword.setTypeface(AppGlobals.normalTypeFace);
+        newPassword.setTypeface(AppGlobals.normalTypeFace);
+        mRecoverButton.setTypeface(AppGlobals.normalTypeFace);
+        forgetPassword.setTypeface(AppGlobals.normalTypeFace);
+
     }
 
     @Override

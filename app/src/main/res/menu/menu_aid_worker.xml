@@ -35,12 +35,16 @@
 
     <group android:checkableBehavior="single"
         android:id="@+id/support">
+    <item android:title="Support">
+        <menu>
         <item
             android:id="@+id/nav_support"
             android:title="Support" />
         <item
             android:id="@+id/nav_privacy_policy"
             android:title="Privacy policy" />
+        </menu>
+    </item>
     </group>
 
 

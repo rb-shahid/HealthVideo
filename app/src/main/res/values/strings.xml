@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">HealthVideo</string>
+    <string name="app_name">iuiuNet</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -72,5 +72,6 @@
     <string name="label_peers">PEERS</string>
 
     <string name="empty"></string>
+    <string name="network_unreachable">Network unreachable</string>
 
 </resources>

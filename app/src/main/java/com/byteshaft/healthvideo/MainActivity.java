@@ -26,6 +26,7 @@ import android.text.SpannableString;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 
 import com.byteshaft.healthvideo.accountfragments.AccountManagerActivity;
 import com.byteshaft.healthvideo.accountfragments.ChangePassword;
@@ -78,6 +79,30 @@ public class MainActivity extends AppCompatActivity
             tabLayout.getTabAt(i).setIcon(icons[i]);
         }
 
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switch (tab.getPosition()) {
+                    case 0:
+
+                        break;
+                    case 1:
+                        RemoteFilesFragment.update();
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -85,11 +110,21 @@ public class MainActivity extends AppCompatActivity
             navigationView.inflateMenu(R.menu.menu_aid_worker);
             MenuItem menuItem = navigationView.getMenu().findItem(R.id.nav_username);
             menuItem.setTitle(AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_USER_NAME));
-            MenuItem connectivity = navigationView.getMenu().findItem(R.id.connectivity_item);
-            Typeface font = Typeface.create("sans-serif-thin", Typeface.NORMAL);
-            SpannableString mNewTitle = new SpannableString(connectivity.getTitle());
-            mNewTitle.setSpan(font, 0 , mNewTitle.length(),  Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-            connectivity.setTitle(mNewTitle);
+            Menu m = navigationView.getMenu();
+            for (int i=0;i<m.size();i++) {
+                MenuItem mi = m.getItem(i);
+
+//                for aapplying a font to subMenu ...
+                SubMenu subMenu = mi.getSubMenu();
+                if (subMenu!=null && subMenu.size() >0 ) {
+                    for (int j=0; j <subMenu.size();j++) {
+                        MenuItem subMenuItem = subMenu.getItem(j);
+                        applyFontToMenuItem(subMenuItem, Typeface.SERIF);
+                    }
+                }
+                //the method we have create in activity
+                applyFontToMenuItem(mi, Typeface.SERIF);
+            }
             /// Doctor's Navigation items
         } else {
             navigationView.inflateMenu(R.menu.menu_nurse);
@@ -112,14 +147,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         backItem = menu.findItem(R.id.action_back_press);
-        for (int i = 0; i < menu.size(); i++) {
-            MenuItem mi = menu.getItem(i);
-            switch (mi.getItemId()) {
-                case R.id.connectivity_item:
-                    applyFontToMenuItem(mi, Typeface.DEFAULT_BOLD);
-                    break;
-            }
-        }
         return super.onCreateOptionsMenu(menu);
     }
 

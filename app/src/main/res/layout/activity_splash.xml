@@ -11,6 +11,7 @@
         android:layout_alignParentRight="true"
         android:layout_marginTop="30dp"
         android:padding="5dp"
+        android:layout_marginRight="10dp"
         android:background="@drawable/spinner_background"
         android:layout_alignParentTop="true"
         android:popupBackground="@color/colorAccent"
@@ -49,11 +50,12 @@
     <ImageButton
         android:id="@+id/question_mark"
         android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/buttons_layout"
+        android:layout_marginRight="10dp"
+        android:layout_alignParentRight="true"
         android:background="@mipmap/ic_question_two"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginLeft="20dp"
-        android:layout_marginBottom="5dp"/>
+        android:layout_marginBottom="20dp"/>
 
 </RelativeLayout>

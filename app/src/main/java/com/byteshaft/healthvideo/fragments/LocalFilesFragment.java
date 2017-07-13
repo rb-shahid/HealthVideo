@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.byteshaft.healthvideo.fragments.RemoteFilesFragment.alreadyExistFiles;
 
 /**
  * Created by s9iper1 on 6/14/17.
@@ -124,6 +125,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.delete:
+                ArrayList<Integer> delete = new ArrayList<>();
                 for (Map.Entry<Integer,String[]> entry : toBeDelete.entrySet()) {
                     Integer key = entry.getKey();
                     String[] value = entry.getValue();
@@ -131,11 +133,15 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                     File file = new File(files.getAbsoluteFile() + "/" + key+"|"+value[0] +"."+ value[1]);
                     Log.i("TAG", "to be delete"+ file.getAbsolutePath());
                     if (file.delete())
-                    dataFileArrayList.remove(Integer.parseInt(value[2]));
-                    localFileFilesAdapter.notifyDataSetChanged();
+                        Log.i("TAG", String.valueOf(Integer.parseInt(value[2])));
+//                    dataFileArrayList.remove((Integer.parseInt(value[2])));
+                    delete.add(Integer.parseInt(value[2]));
+//                    localFileFilesAdapter.notifyDataSetChanged();
+                    Log.i("TAG", "Name "+key+" " + value[0]+" "+value[1]);
+                    alreadyExistFiles.remove(value[3]+value[0]+"."+value[1]);
                 }
+                readFiles();
                 toBeDelete = new HashMap<>();
-
                 return true;
             default: return false;
         }
@@ -147,7 +153,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         DataFile dataFile = dataFileArrayList.get(i);
         String fullFileName = dataFile.getTitle()+"."+dataFile.getExtension();
         if (!toBeDelete.containsKey(dataFile.getId())) {
-            String strings[] = {dataFile.getTitle(), dataFile.getExtension(), String.valueOf(i)};
+            String strings[] = {dataFile.getTitle(), dataFile.getExtension(), String.valueOf(i), String.valueOf(dataFile.getId())};
             toBeDelete.put(dataFile.getId(), strings);
         } else {
             toBeDelete.remove(dataFile.getId());
@@ -189,11 +195,11 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(dataFile.getId());
             stringBuilder.append(SPACE);
-            if (dataFile.getTitle().length() > 15) {
+            if (dataFile.getTitle().length() > 30) {
                 String bigString = dataFile.getTitle().substring(0, Math.min(
-                        dataFile.getTitle().length(), 13));
-                stringBuilder.append(DOTS);
+                        dataFile.getTitle().length(), 30));
                 stringBuilder.append(bigString);
+                stringBuilder.append(DOTS);
                 stringBuilder.append(SPACE);
             } else {
                 stringBuilder.append(dataFile.getTitle());

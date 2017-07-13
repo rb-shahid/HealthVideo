@@ -1,12 +1,21 @@
 package com.byteshaft.healthvideo.fragments;
 
+import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,6 +35,11 @@ import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.utils.Helpers;
 import com.byteshaft.requests.HttpRequest;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +53,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -49,25 +65,29 @@ import static android.content.Context.MODE_PRIVATE;
  */
 
 public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReadyStateChangeListener,
-        HttpRequest.OnErrorListener, AdapterView.OnItemClickListener {
+        HttpRequest.OnErrorListener, AdapterView.OnItemClickListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LocationListener{
 
     private View mBaseView;
     private ListView mListView;
     private ArrayList<DataFile> remoteFileArrayList;
-    private RemoteFilesAdapter remoteFilesAdapter;
+    private static RemoteFilesAdapter remoteFilesAdapter;
     private HashMap<Integer, String[]> toBeDownload;
     private static final String SPACE = " ";
     private static final String DOTS = "...";
     private ArrayList<String> downloadAbleUrl;
     private File directory;
-    private ArrayList<String> alreadyExistFiles;
-    private int counter = 0;
+    public static ArrayList<String> alreadyExistFiles;
     private ArrayList<Integer> downloadingNow;
     private boolean foreground = false;
     private int id = 1001;
     private NotificationManager mNotificationManager;
     private NotificationCompat.Builder  mBuilder;
     private MenuItem saveMenuItem;
+    private final int PERMISSION_REQUEST = 10;
+    private int counter = 0;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -80,22 +100,34 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         downloadAbleUrl = new ArrayList<>();
         mBaseView = inflater.inflate(R.layout.remote_files_fragment, container, false);
         mListView = (ListView) mBaseView.findViewById(R.id.remote_files_list);
+        swipeRefreshLayout = (SwipeRefreshLayout) mBaseView.findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                remoteFileArrayList = new ArrayList<>();
+                remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
+                mListView.setAdapter(remoteFilesAdapter);
+                getRemoteFiles();
+            }
+        });
         mListView.setOnItemClickListener(this);
         getRemoteFiles();
         File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
-        Log.i("TAG", "size " + filesArray.length);
+        Log.i("TAG", "Remote file " + filesArray.length);
         alreadyExistFiles = new ArrayList<>();
         remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
         mListView.setAdapter(remoteFilesAdapter);
         for (File file: filesArray) {
-            Log.i("TAG", "name " + file.getName());
             String[] onlyFileName = file.getName().split("\\|");
-            Log.i("TAG", "after split " + onlyFileName[1]);
-            alreadyExistFiles.add(onlyFileName[1]);
-            Log.i("TAG", "file " + alreadyExistFiles);
+            alreadyExistFiles.add(onlyFileName[0]+onlyFileName[1]);
+            Log.i("TAG", "Remote file " + onlyFileName[0]+onlyFileName[1]);
         }
         return mBaseView;
+    }
+
+    public static void update() {
+        remoteFilesAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -116,6 +148,27 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         inflater.inflate(R.menu.download, menu);
         saveMenuItem = menu.findItem(R.id.download);
         saveMenuItem.setVisible(false);
+        if (toBeDownload.size() > 0) {
+            saveMenuItem.setVisible(true);
+        }
+    }
+
+    private  boolean checkAndRequestPermissions() {
+        int permissionSendMessage = ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.READ_PHONE_STATE);
+        int locationPermission = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION);
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        if (locationPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (permissionSendMessage != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            requestPermissions(listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),PERMISSION_REQUEST);
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -127,17 +180,26 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                     Integer key = entry.getKey();
                     downloadingNow.add(key);
                 }
-                if (toBeDownload.size() > 0) {
-                    counter = 0;
-                    String[] strings = toBeDownload.get(downloadingNow.get(counter));
-                    mBuilder = new NotificationCompat.Builder(getActivity().getApplicationContext());
-                    mBuilder.setContentInfo("Download...")
-                            .setContentText("Downloading: "+capitalizeLetter(strings[2]))
-                            .setAutoCancel(false)
-                            .setSmallIcon(R.drawable.downlaod);
-                    mBuilder.setProgress(100, 0, false);
-                    mNotificationManager.notify(id, mBuilder.build());
-                    new DownloadTask().execute(strings);
+                if (ContextCompat.checkSelfPermission(getActivity(),
+                        Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(getActivity(),
+                        Manifest.permission.READ_PHONE_STATE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    checkAndRequestPermissions();
+                } else {
+                    if (toBeDownload.size() > 0) {
+                        counter = 0;
+                        String[] strings = toBeDownload.get(downloadingNow.get(counter));
+                        Log.i("TAG", "Remote file " + strings[0] + " " + strings[1] + " " + strings[2] + " " + strings[3]);
+                        mBuilder = new NotificationCompat.Builder(getActivity().getApplicationContext());
+                        mBuilder.setContentInfo("Download...")
+                                .setContentText("Downloading: " + capitalizeLetter(strings[2]))
+                                .setAutoCancel(false)
+                                .setSmallIcon(R.drawable.downlaod);
+                        mBuilder.setProgress(100, 0, false);
+                        mNotificationManager.notify(id, mBuilder.build());
+                        new DownloadTask().execute(strings);
+                    }
                 }
                 return true;
             default:
@@ -166,6 +228,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             case HttpRequest.STATE_DONE:
                 switch (request.getStatus()) {
                     case HttpURLConnection.HTTP_OK:
+                        swipeRefreshLayout.setRefreshing(false);
                         System.out.println(request.getResponseText());
                         try {
                             JSONObject jsonObject = new JSONObject(request.getResponseText());
@@ -180,6 +243,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                                     dataFile.setDuration(file.getString("duration"));
                                     dataFile.setSize(file.getString("size"));
                                     dataFile.setUrl(file.getString("url"));
+                                    dataFile.setUuid(file.getString("uuid"));
                                     remoteFileArrayList.add(dataFile);
                                     remoteFilesAdapter.notifyDataSetChanged();
                                 }
@@ -193,12 +257,14 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
 
     @Override
     public void onError(HttpRequest request, int readyState, short error, Exception exception) {
+        Log.i("TAG", "response " +request.getResponseText());
+        swipeRefreshLayout.setRefreshing(false);
         switch (readyState) {
             case HttpRequest.ERROR_CONNECTION_TIMED_OUT:
                 Helpers.showSnackBar(getView(), getResources().getString(R.string.connection_time_out));
                 break;
             case HttpRequest.ERROR_NETWORK_UNREACHABLE:
-                Helpers.showSnackBar(getView(), exception.getLocalizedMessage());
+                Helpers.showSnackBar(getView(), getResources().getString(R.string.network_unreachable));
                 break;
             case HttpRequest.ERROR_SSL_CERTIFICATE_INVALID:
                 Helpers.showSnackBar(getView(), getResources().getString(R.string.hand_shake_error));
@@ -209,12 +275,12 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         DataFile dataFile = remoteFileArrayList.get(i);
-        String fullFileName = dataFile.getTitle()+"."+dataFile.getExtension();
+        String fullFileName = dataFile.getId()+dataFile.getTitle()+"."+dataFile.getExtension();
         if (alreadyExistFiles.contains(fullFileName)) {
             Helpers.showSnackBar(getView(), getResources().getString(R.string.file_already_exist));
         }
         if (!toBeDownload.containsKey(dataFile.getId())) {
-            String strings[] = {dataFile.getUrl(), dataFile.getExtension(), dataFile.getTitle()};
+            String strings[] = {dataFile.getUrl(), dataFile.getExtension(), dataFile.getTitle(), String.valueOf(dataFile.getId())};
             toBeDownload.put(dataFile.getId(), strings);
         } else {
             toBeDownload.remove(dataFile.getId());
@@ -258,11 +324,11 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(dataFile.getId());
             stringBuilder.append(SPACE);
-            if (dataFile.getTitle().length() > 25) {
+            if (dataFile.getTitle().length() > 30) {
                 String bigString = dataFile.getTitle().substring(0, Math.min(
-                        dataFile.getTitle().length(), 25));
-                stringBuilder.append(DOTS);
+                        dataFile.getTitle().length(), 30));
                 stringBuilder.append(bigString);
+                stringBuilder.append(DOTS);
                 stringBuilder.append(SPACE);
             } else {
                 stringBuilder.append(dataFile.getTitle());
@@ -270,8 +336,8 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             }
             stringBuilder.append(dataFile.getSize());
             viewHolder.fileName.setText(stringBuilder.toString());
-            String fullFileName = dataFile.getTitle()+"."+dataFile.getExtension();
-            Log.i("TAG", "file " + fullFileName);
+            String fullFileName = dataFile.getId()+dataFile.getTitle()+"."+dataFile.getExtension();
+            Log.i("TAG", "Remote file full name " + fullFileName);
             if (alreadyExistFiles.contains(fullFileName)) {
                 viewHolder.fileName.setTextColor(getResources().getColor(R.color.already_existing_files));
                 viewHolder.fileName.setTypeface(null, Typeface.BOLD_ITALIC);
@@ -360,7 +426,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 if (connection != null)
                     connection.disconnect();
             }
-            return sUrl[2]+"."+sUrl[1];
+            return sUrl[2]+"."+sUrl[1] + "-" + sUrl[3];
         }
 
         @Override
@@ -374,19 +440,156 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             Log.i("TAG", "DONE " + s);
+            String[] file = s.split("-");
+            Log.i("TAG", "DONE " + file[0]);
+            Log.i("TAG", "DONE " + file[1]);
             if (foreground) {
                 LocalFilesFragment.getInstance().readFiles();
-                alreadyExistFiles.add(s);
+                alreadyExistFiles.add(file[1]+file[0]);
                 remoteFilesAdapter.notifyDataSetChanged();
             }
+            getLocation(file[1]);
             counter++;
             if (counter < downloadingNow.size()) {
-                String[] strings = toBeDownload.get(downloadingNow.get(counter));
-                new DownloadTask().execute(strings);
-                mBuilder.setContentText("Downloading: "+capitalizeLetter(strings[2]));
+                new android.os.Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        String[] strings = toBeDownload.get(downloadingNow.get(counter));
+                        new DownloadTask().execute(strings);
+                        mBuilder.setContentText("Downloading: "+capitalizeLetter(strings[2]));
+                    }
+                }, 2000);
             } else {
+                toBeDownload = new HashMap<>();
                 mNotificationManager.cancel(id);
             }
+        }
+    }
+
+    private void sendProgressUpdateForSuccessDownload(String fileId, String locationCoordinates
+            , boolean isCurrentLocation) {
+        TelephonyManager mngr = (TelephonyManager) AppGlobals.getContext().
+                getSystemService(Context.TELEPHONY_SERVICE);
+        HttpRequest request = new HttpRequest(AppGlobals.getContext());
+        request.setOnReadyStateChangeListener(new HttpRequest.OnReadyStateChangeListener() {
+            @Override
+            public void onReadyStateChange(HttpRequest request, int readyState) {
+                switch (readyState) {
+                    case HttpRequest.STATE_DONE:
+                        switch (request.getStatus()) {
+                            case HttpURLConnection.HTTP_OK:
+                                Log.i("TAG", request.getResponseText());
+                                break;
+                            case HttpURLConnection.HTTP_BAD_REQUEST:
+                                Log.i("TAG", request.getResponseText());
+                                break;
+
+                        }
+                }
+
+            }
+        });
+        request.setOnErrorListener(new HttpRequest.OnErrorListener() {
+            @Override
+            public void onError(HttpRequest request, int readyState, short error, Exception exception) {
+
+            }
+        });
+        request.open("POST", String.format("%suser_download_file", AppGlobals.BASE_URL));
+        request.setRequestHeader("authorization",
+                AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("deviceid", mngr.getDeviceId());
+            jsonObject.put("fileid", fileId);
+            jsonObject.put("location", locationCoordinates);
+            jsonObject.put("timestamp", new Date().getTime());
+            jsonObject.put("is_current_location", isCurrentLocation);
+            Log.i("TAG", jsonObject.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        request.send(jsonObject.toString());
+    }
+
+
+    /**
+     * Location code
+     */
+
+    private LocationRequest mLocationRequest;
+    private GoogleApiClient mGoogleApiClient;
+    private String fileId;
+    private int locationCounter = 0;
+
+    private void getLocation(String fileId) {
+        buildGoogleApiClient();
+        mGoogleApiClient.connect();
+        this.fileId = fileId;
+        locationCounter = 0;
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(AppGlobals.getContext())
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        startLocationUpdates();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    public void startLocationUpdates() {
+        long INTERVAL = 0;
+        long FASTEST_INTERVAL = 0;
+        if (ActivityCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(INTERVAL);
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.d("TAG", "Location changed called" + "Lat " + location.getLatitude() + ", Lng "+ location.getLongitude());
+        if (locationCounter >= 1) {
+            stopLocationUpdate();
+            sendProgressUpdateForSuccessDownload(fileId, location.getLatitude()+"," + location.getLongitude(), true);
+        }
+        locationCounter++;
+    }
+
+    private void stopLocationUpdate() {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
         }
     }
 }

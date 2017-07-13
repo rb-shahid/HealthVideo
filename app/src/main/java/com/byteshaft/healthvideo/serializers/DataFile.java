@@ -11,6 +11,16 @@ public class DataFile {
     private String size;
     private String url;
 
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    private String uuid;
+
     public String getDuration() {
         return duration;
     }

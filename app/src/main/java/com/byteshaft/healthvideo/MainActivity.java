@@ -3,6 +3,7 @@ package com.byteshaft.healthvideo;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -19,12 +21,21 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 
 import com.byteshaft.healthvideo.accountfragments.AccountManagerActivity;
+import com.byteshaft.healthvideo.accountfragments.ChangePassword;
+import com.byteshaft.healthvideo.fragments.Local;
 import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
-import com.byteshaft.healthvideo.radar.WifiDirectActivity;
+import com.byteshaft.healthvideo.fragments.Server;
+import com.byteshaft.healthvideo.utils.CustomTypefaceSpan;
+import com.byteshaft.healthvideo.wifi.WifiActivity;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -36,6 +47,7 @@ public class MainActivity extends AppCompatActivity
             R.drawable.user,
             R.drawable.connection
     };
+    public MenuItem backItem;
 
     public static MainActivity getInstance() {
         return instance;
@@ -46,12 +58,10 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         instance = this;
-        if (SplashScreen.getInstance() != null) {
-            SplashScreen.getInstance().finish();
-        }
         if (AccountManagerActivity.getInstance() != null) {
             AccountManagerActivity.getInstance().finish();
         }
+        Log.i("TAG", AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -68,6 +78,29 @@ public class MainActivity extends AppCompatActivity
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
             tabLayout.getTabAt(i).setIcon(icons[i]);
         }
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switch (tab.getPosition()) {
+                    case 0:
+
+                        break;
+                    case 1:
+                        RemoteFilesFragment.update();
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -76,6 +109,20 @@ public class MainActivity extends AppCompatActivity
             navigationView.inflateMenu(R.menu.menu_aid_worker);
             MenuItem menuItem = navigationView.getMenu().findItem(R.id.nav_username);
             menuItem.setTitle(AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_USER_NAME));
+            Menu m = navigationView.getMenu();
+            for (int i=0;i<m.size();i++) {
+                MenuItem mi = m.getItem(i);
+
+                SubMenu subMenu = mi.getSubMenu();
+                if (subMenu!=null && subMenu.size() >0 ) {
+                    for (int j=0; j <subMenu.size();j++) {
+                        MenuItem subMenuItem = subMenu.getItem(j);
+                        applyFontToMenuItem(subMenuItem, AppGlobals.normalTypeFace);
+                    }
+                }
+                //the method we have create in activity
+                applyFontToMenuItem(mi, AppGlobals.moreBold);
+            }
             /// Doctor's Navigation items
         } else {
             navigationView.inflateMenu(R.menu.menu_nurse);
@@ -94,6 +141,29 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        backItem = menu.findItem(R.id.action_back_press);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    private void applyFontToMenuItem(MenuItem mi, Typeface font) {
+        SpannableString mNewTitle = new SpannableString(mi.getTitle());
+        mNewTitle.setSpan(new CustomTypefaceSpan("", font), 0, mNewTitle.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        mi.setTitle(mNewTitle);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_back_press:
+                onBackPressed();
+                return true;
+            default: return false;
+        }
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -103,7 +173,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_wifi_connection) {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wifiManager.isWifiEnabled()) {
-                startActivity(new Intent(getApplicationContext(), WifiDirectActivity.class));
+                startActivity(new Intent(getApplicationContext(), WifiActivity.class));
             } else {
                 Snackbar.make(findViewById(android.R.id.content), "Wifi Disabled!", Snackbar.LENGTH_SHORT).show();
             }
@@ -127,12 +197,22 @@ public class MainActivity extends AppCompatActivity
             });
             alertDialog = alertDialogBuilder.create();
             alertDialog.show();
+        } else if (id == R.id.nav_change_password) {
+            startActivity(new Intent(getApplicationContext(), ChangePassword.class));
         }
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void loadFragment(Fragment fragment) {
+        String backStateName = fragment.getClass().getName();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.enter, R.anim.exit, R.anim.pop_enter, R.anim.pop_exit);
+        fragmentTransaction.replace(R.id.container, fragment, backStateName);
+        fragmentTransaction.commit();
     }
 
     /**
@@ -149,12 +229,24 @@ public class MainActivity extends AppCompatActivity
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            switch (position) {
-                case 0:
-                    return new LocalFilesFragment();
-                case 1:
-                    return new RemoteFilesFragment();
-                default: return new LocalFilesFragment();
+            if (AppGlobals.isLogin() && AppGlobals.USER_TYPE == 1) {
+                switch (position) {
+                    case 0:
+                        return new LocalFilesFragment();
+                    case 1:
+                        return new RemoteFilesFragment();
+                    default:
+                        return new LocalFilesFragment();
+                }
+            } else {
+                switch (position) {
+                    case 0:
+                        return new Local();
+                    case 1:
+                        return new Server();
+                    default:
+                        return new Local();
+                }
             }
         }
 

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">HealthVideo</string>
+    <string name="app_name">iuiuNet</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -12,7 +12,7 @@
     <string name="forgot_password">Forgot Password</string>
     <string name="enter_email">Enter Email</string>
     <string name="email">Email</string>
-    <string name="recover">Recover</string>
+    <string name="recover">submit</string>
     <string name="old_password">Enter Old password</string>
     <string name="new_password">Enter New password</string>
     <string name="reset">Reset</string>
@@ -41,14 +41,37 @@
     <string name="action_download">Download</string>
     <string name="action_delete">Delete</string>
     <string name="file_already_exist">File already downloaded</string>
+    <string name="password_error">Password must contain 6 character</string>
+    <string name="check_credentials">Please check login credentials</string>
+    <string name="password_changed">Password changed successfully</string>
+    <string name="change_password">Change password</string>
 
 
     <!--array for language-->
 
     <string-array name="language_array">
         <item>English</item>
-        <item>French</item>
-        <item>Spanish</item>
+        <item>Arabic</item>
+        <item>Swahili</item>
     </string-array>
+
+    <!--wifi-->
+
+    <string name="enable_p2p_button">P2P On/Off</string>
+    <string name="discover_peers_button">Discover</string>
+    <string name="connect_peer_button">Connect</string>
+    <string name="disconnect_peer_button">Disconnect</string>
+    <string name="get_file_button">Launch Gallery</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="client_text">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
+    <string name="empty_message">No devices found. Turn on P2P and perform discovery from the Action Bar</string>
+    <string name="p2p_off_warning">Enable P2P from action bar button above or system settings</string>
+    <string name="group_owner_text">"Am I the Group Owner? "</string>
+    <string name="label_me">ME</string>
+    <string name="label_peers">PEERS</string>
+
+    <string name="empty"></string>
+    <string name="network_unreachable">Network unreachable</string>
 
 </resources>

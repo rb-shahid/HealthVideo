@@ -19,6 +19,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        android:background="#d3d3d3" />
+        app:itemTextColor="@android:color/black"
+        android:background="#d3d3d3"/>
 
 </android.support.v4.widget.DrawerLayout>

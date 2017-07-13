@@ -3,6 +3,7 @@ package com.byteshaft.healthvideo.radar;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -10,8 +11,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
-
-import com.peak.salut.SalutDevice;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,7 +32,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
 
     private Random random;
     private Vector<String> vecKeywords;
-    private HashMap<String, SalutDevice> deviceHashMap;
+    private HashMap<String, WifiP2pDevice> deviceHashMap;
     private int width;
     private int height;
     private int mode = RippleView.MODE_OUT;
@@ -41,7 +40,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
     private int shadowColor = 0xdd696969;
 
     public interface OnRippleViewClickListener {
-        void onRippleViewClicked(SalutDevice salutDevice);
+        void onRippleViewClicked(WifiP2pDevice salutDevice);
     }
 
     private OnRippleViewClickListener onRippleOutViewClickListener;
@@ -77,7 +76,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
         onRippleOutViewClickListener = listener;
     }
 
-    public void addKeyWord(String keyword, SalutDevice salutDevice) {
+    public void addKeyWord(String keyword, WifiP2pDevice salutDevice) {
         if (deviceHashMap == null) {
             deviceHashMap = new HashMap<>();
         }

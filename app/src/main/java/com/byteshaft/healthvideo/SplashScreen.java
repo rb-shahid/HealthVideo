@@ -1,5 +1,6 @@
 package com.byteshaft.healthvideo;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
@@ -8,13 +9,18 @@ import android.support.v7.widget.AppCompatSpinner;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.byteshaft.healthvideo.accountfragments.AccountManagerActivity;
 import com.byteshaft.healthvideo.utils.Helpers;
+
+import java.util.ArrayList;
 
 /**
  * Created by s9iper1 on 6/10/17.
@@ -44,7 +50,14 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
         nurse = (ImageButton) findViewById(R.id.nurse);
         questionMark = (ImageButton) findViewById(R.id.question_mark);
         questionMark.setOnClickListener(this);
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add("English");
+        arrayList.add("Arabic");
+        arrayList.add("Swahili");
         appCompatSpinner = (AppCompatSpinner) findViewById(R.id.spinner);
+        MySpinnerAdapter mySpinnerAdapter = new MySpinnerAdapter(getApplicationContext(),
+                android.R.layout.simple_list_item_1, arrayList);
+        appCompatSpinner.setAdapter(mySpinnerAdapter);
         appCompatSpinner.setOnItemSelectedListener(this);
         aidWorker.setOnClickListener(this);
         nurse.setOnClickListener(this);
@@ -105,5 +118,37 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
                 return false;
             }
         });
+    }
+
+    private static class MySpinnerAdapter extends ArrayAdapter<String> {
+
+        private ArrayList<String> items;
+
+        private MySpinnerAdapter(Context context, int resource, ArrayList<String> items) {
+            super(context, resource, items);
+            this.items = items;
+        }
+
+        // Affects default (closed) state of the spinner
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView view = (TextView) super.getView(position, convertView, parent);
+            view.setText(getItem(position));
+            view.setTypeface(AppGlobals.normalTypeFace);
+            return view;
+        }
+
+        @Override
+        public int getCount() {
+            return items.size();
+        }
+
+        // Affects opened state of the spinner
+        @Override
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            TextView view = (TextView) super.getDropDownView(position, convertView, parent);
+            view.setTypeface(AppGlobals.normalTypeFace);
+            return view;
+        }
     }
 }

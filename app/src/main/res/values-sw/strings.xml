@@ -51,8 +51,8 @@
 
     <string-array name="language_array">
         <item>English</item>
-        <item>Arabic</item>
-        <item>Swahili</item>
+        <item>French</item>
+        <item>Spanish</item>
     </string-array>
 
     <!--wifi-->

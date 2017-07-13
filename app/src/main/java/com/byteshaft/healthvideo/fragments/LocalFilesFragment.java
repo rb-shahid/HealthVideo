@@ -1,6 +1,7 @@
 package com.byteshaft.healthvideo.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -21,6 +23,7 @@ import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
+import com.byteshaft.healthvideo.uihelpers.VideoPlayerActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -76,6 +79,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
             Log.i("TAG", file.getAbsolutePath());
             String[] onlyFileName = file.getName().split("\\|");
             DataFile dataFile = new DataFile();
+            dataFile.setUrl(file.getAbsolutePath());
             dataFile.setId(Integer.parseInt(onlyFileName[0]));
             String[] fileAndExt = onlyFileName[1].split("\\.");
             Log.i("TAG", "name " + onlyFileName[1]);
@@ -180,13 +184,14 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         }
 
         @Override
-        public View getView(int position, android.view.View convertView, ViewGroup parent) {
+        public View getView(final int position, android.view.View convertView, ViewGroup parent) {
             if (convertView == null) {
-                convertView = getActivity().getLayoutInflater().inflate(R.layout.remote_delegate_files,
+                convertView = getActivity().getLayoutInflater().inflate(R.layout.delegate_local_file,
                         parent, false);
                 viewHolder = new ViewHolder();
                 viewHolder.fileName = (TextView) convertView.findViewById(R.id.name);
                 viewHolder.relativeLayout = (RelativeLayout) convertView.findViewById(R.id.relative_layout);
+                viewHolder.openButton = (Button) convertView.findViewById(R.id.open);
                 convertView.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) convertView.getTag();
@@ -209,7 +214,6 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
             viewHolder.fileName.setText(stringBuilder.toString());
             String fullFileName = dataFile.getTitle()+"."+dataFile.getExtension();
             Log.i("TAG", "file " + fullFileName);
-
                 viewHolder.fileName.setTypeface(Typeface.SANS_SERIF);
                 viewHolder.fileName.setTypeface(null, Typeface.BOLD);
                 if (toBeDelete.containsKey(dataFile.getId())) {
@@ -220,8 +224,19 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                     viewHolder.fileName.setTextColor(getResources()
                             .getColor(android.R.color.black));
                     viewHolder.relativeLayout.setBackgroundColor(getResources().getColor(android.R.color.white));
-
             }
+            viewHolder.openButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    DataFile dataFile = arrayList.get(position);
+                    if (dataFile.getExtension().equals("3gp")) {
+                        Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
+                        intent.putExtra("path", dataFile.getUrl());
+                        startActivity(intent);
+                    }
+                }
+            });
+
             return convertView;
         }
 
@@ -234,5 +249,6 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     private class ViewHolder {
         TextView fileName;
         RelativeLayout relativeLayout;
+        Button openButton;
     }
 }

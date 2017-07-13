@@ -71,7 +71,6 @@ public class SignUp extends Fragment implements View.OnClickListener,
         mVerifyPassword.setTypeface(AppGlobals.normalTypeFace);
         mSignUpButton.setTypeface(AppGlobals.normalTypeFace);
         askPermission();
-
         mSignUpButton.setOnClickListener(this);
         return mBaseView;
     }

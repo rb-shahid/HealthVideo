@@ -127,6 +127,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     }
 
     public static void update() {
+        if (remoteFilesAdapter != null)
         remoteFilesAdapter.notifyDataSetChanged();
     }
 

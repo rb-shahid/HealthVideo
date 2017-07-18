@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,13 +24,8 @@ import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.uihelpers.VideoPlayerActivity;
-import com.byteshaft.requests.HttpRequest;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -157,50 +151,6 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         }
     }
 
-
-    private void sendProgressUpdateForSuccessDownload(String fileId) {
-        TelephonyManager mngr = (TelephonyManager) AppGlobals.getContext().
-                getSystemService(Context.TELEPHONY_SERVICE);
-        HttpRequest request = new HttpRequest(AppGlobals.getContext());
-        request.setOnReadyStateChangeListener(new HttpRequest.OnReadyStateChangeListener() {
-            @Override
-            public void onReadyStateChange(HttpRequest request, int readyState) {
-                switch (readyState) {
-                    case HttpRequest.STATE_DONE:
-                        switch (request.getStatus()) {
-                            case HttpURLConnection.HTTP_OK:
-                                Log.i("TAG", request.getResponseText());
-                                break;
-                            case HttpURLConnection.HTTP_BAD_REQUEST:
-                                Log.i("TAG", request.getResponseText());
-                                break;
-
-                        }
-                }
-
-            }
-        });
-        request.setOnErrorListener(new HttpRequest.OnErrorListener() {
-            @Override
-            public void onError(HttpRequest request, int readyState, short error, Exception exception) {
-
-            }
-        });
-        request.open("POST", String.format("%suser_delete_file", AppGlobals.BASE_URL));
-        request.setRequestHeader("authorization",
-                AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
-        JSONObject jsonObject = new JSONObject();
-        try {
-
-            jsonObject.put("fileid", fileId);
-            Log.i("TAG", jsonObject.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        request.send(jsonObject.toString());
-    }
-
-
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         DataFile dataFile = dataFileArrayList.get(i);
@@ -241,6 +191,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                 viewHolder.fileName = (TextView) convertView.findViewById(R.id.name);
                 viewHolder.relativeLayout = (RelativeLayout) convertView.findViewById(R.id.relative_layout);
                 viewHolder.openButton = (Button) convertView.findViewById(R.id.open);
+                viewHolder.fileName.setTypeface(AppGlobals.normalTypeFace);
                 convertView.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) convertView.getTag();

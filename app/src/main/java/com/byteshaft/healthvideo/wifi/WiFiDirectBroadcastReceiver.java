@@ -68,9 +68,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             } else {
                 activity.setIsWifiP2pEnabled(false);
                 activity.resetData();
-
             }
-            Log.d(getClass().getName(), "P2P state changed - " + state);
+            Log.d(WifiActivity.TAG, "P2P state changed - " + state);
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
 
             // request available peers from the wifi p2p manager. This is an
@@ -80,7 +79,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 manager.requestPeers(channel, (PeerListListener) activity.getSupportFragmentManager()
                         .findFragmentById(R.id.frag_list));
             }
-            Log.d(getClass().getName(), "P2P peers changed");
+            Log.d(WifiActivity.TAG, "P2P peers changed");
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
 
             if (manager == null) {
@@ -96,7 +95,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 // info to find group owner IP
 
                 DeviceDetailFragment fragment = (DeviceDetailFragment) activity
-                        .getSupportFragmentManager().findFragmentById(R.id.frag_detail);
+                        .getFragmentManager().findFragmentById(R.id.frag_detail);
                 manager.requestConnectionInfo(channel, fragment);
             } else {
                 // It's a disconnect

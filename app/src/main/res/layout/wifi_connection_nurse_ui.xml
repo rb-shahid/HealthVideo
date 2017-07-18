@@ -12,7 +12,6 @@
         android:textSize="20sp"
         android:textStyle="bold|italic"/>
 
-
     <com.byteshaft.healthvideo.radar.RippleView
         android:id="@+id/ripple"
         android:layout_centerHorizontal="true"
@@ -26,8 +25,8 @@
         android:gravity="center"
         android:padding="10dp"
         android:textStyle="bold|italic"
-        android:background="@android:color/black"
-        android:textColor="@android:color/holo_red_dark"
+        android:background="@android:color/holo_blue_dark"
+        android:textColor="@android:color/white"
         android:layout_below="@+id/ripple"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

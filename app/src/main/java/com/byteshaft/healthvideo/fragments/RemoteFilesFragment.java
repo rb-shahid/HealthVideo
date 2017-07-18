@@ -318,6 +318,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 viewHolder.fileName = (TextView) convertView.findViewById(R.id.name);
                 viewHolder.relativeLayout = (RelativeLayout) convertView.findViewById(R.id.relative_layout);
                 convertView.setTag(viewHolder);
+                viewHolder.fileName.setTypeface(AppGlobals.normalTypeFace);
             } else {
                 viewHolder = (ViewHolder) convertView.getTag();
             }

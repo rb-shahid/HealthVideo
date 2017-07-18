@@ -38,6 +38,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
     private int mode = RippleView.MODE_OUT;
     private int fontColor = 0xff0000ff;
     private int shadowColor = 0xdd696969;
+    private RippleView txt;
 
     public interface OnRippleViewClickListener {
         void onRippleViewClicked(WifiP2pDevice salutDevice);
@@ -67,6 +68,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
         init(attrs, context);
     }
 
+
     public void setMode(int mode)
     {
         this.mode = mode;
@@ -80,8 +82,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
         if (deviceHashMap == null) {
             deviceHashMap = new HashMap<>();
         }
-        if (vecKeywords.size() < MAX)
-        {
+        if (vecKeywords.size() < MAX) {
             if (!vecKeywords.contains(keyword))
                 vecKeywords.add(keyword);
                 deviceHashMap.put(keyword, salutDevice);
@@ -93,6 +94,20 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
         return vecKeywords;
     }
 
+    public void removeAll() {
+        for (String keyWord: vecKeywords) {
+            Log.i("TAG", "removing");
+            removeKeyWord(keyWord);
+        }
+        removeAllViews();
+        deviceHashMap = new HashMap<>();
+        txt.stopRippleAnimation();
+    }
+
+    public void startAnimation() {
+        txt.startRippleAnimation();
+    }
+
     public void removeKeyWord(String keyword) {
         if (vecKeywords.contains(keyword)) {
             vecKeywords.remove(keyword);
@@ -100,8 +115,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
         }
     }
 
-    private void init(AttributeSet attrs, Context context)
-    {
+    private void init(AttributeSet attrs, Context context) {
         random = new Random();
         vecKeywords = new Vector<String>(MAX);
         getViewTreeObserver().addOnGlobalLayoutListener(this);
@@ -109,24 +123,19 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
     }
 
     @Override
-    public void onGlobalLayout()
-    {
+    public void onGlobalLayout() {
         int tmpW = getWidth();
         int tmpH = getHeight();
-        if (width != tmpW || height != tmpH)
-        {
+        if (width != tmpW || height != tmpH) {
             width = tmpW;
             height = tmpH;
             Log.d(tag, "RandomTextView width = " + width + "; height = " + height);
         }
     }
 
-    public void show()
-    {
+    public void show() {
         this.removeAllViews();
-
-        if (width > 0 && height > 0 && vecKeywords != null && vecKeywords.size() > 0)
-        {
+        if (width > 0 && height > 0 && vecKeywords != null && vecKeywords.size() > 0) {
 
             int xCenter = width >> 1;
             int yCenter = height >> 1;
@@ -143,14 +152,13 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
             LinkedList<RippleView> listTxtTop = new LinkedList<>();
             LinkedList<RippleView> listTxtBottom = new LinkedList<>();
 
-            for (int i = 0; i < size; i++)
-            {
+            for (int i = 0; i < size; i++) {
                 String keyword = vecKeywords.get(i);
                 int ranColor = fontColor;
                 int xy[] = randomXY(random, listX, listY, xItem);
 
                 int txtSize = TEXT_SIZE;
-                final RippleView txt = new RippleView(getContext());
+                txt = new RippleView(getContext());
                 if (mode == RippleView.MODE_IN) {
                     txt.setMode(RippleView.MODE_IN);
                 }

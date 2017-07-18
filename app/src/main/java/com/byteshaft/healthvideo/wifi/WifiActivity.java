@@ -1,5 +1,6 @@
 package com.byteshaft.healthvideo.wifi;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,24 +18,26 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
 
 
 public class WifiActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, DeviceListFragment.DeviceActionListener {
 
+    public static final String TAG = "wifidirectdemo";
     private WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
 
     private final IntentFilter intentFilter = new IntentFilter();
     private WifiP2pManager.Channel channel;
-    private BroadcastReceiver receiver = null;
-    public static MenuItem stateMenu;
-    private static WifiActivity sInstance;
+    public static BroadcastReceiver receiver = null;
     private DeviceDetailFragment fragment;
+    public static MenuItem stateMenu;
+    private static WifiActivity instance;
 
     public static WifiActivity getInstance() {
-        return sInstance;
+        return instance;
     }
 
     /**
@@ -47,9 +50,11 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         setContentView(R.layout.main);
-        sInstance = this;
-
+        instance = this;
         // add necessary intent values to be matched.
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -60,8 +65,8 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
         channel = manager.initialize(this, getMainLooper(), null);
     }
 
-    /** register the BroadcastReceiver with the intent values to be matched */
 
+    /** register the BroadcastReceiver with the intent values to be matched */
     @Override
     public void onResume() {
         super.onResume();
@@ -82,7 +87,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public void resetData() {
         DeviceListFragment fragmentList = (DeviceListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.frag_list);
-        fragment = (DeviceDetailFragment) getSupportFragmentManager()
+        fragment = (DeviceDetailFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_detail);
         if (fragmentList != null) {
             fragmentList.clearPeers();
@@ -104,9 +109,13 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
      * (non-Javadoc)
      * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
      */
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
             case R.id.atn_direct_enable:
                 if (manager != null && channel != null) {
 
@@ -116,7 +125,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
                     startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 } else {
-                    Log.e(getClass().getName(), "channel or manager is null");
+                    Log.e(TAG, "channel or manager is null");
                 }
                 return true;
 
@@ -129,14 +138,14 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 final DeviceListFragment fragment = (DeviceListFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.frag_list);
                 fragment.onInitiateDiscovery();
-                startDiscovery();
+                initiateDiscovery(true);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void startDiscovery() {
+    public void initiateDiscovery(boolean manual) {
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
 
             @Override
@@ -151,14 +160,45 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                         Toast.LENGTH_SHORT).show();
             }
         });
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(WifiActivity.this, "Discovery Stop",
+                                Toast.LENGTH_SHORT).show();
+                        if (AppGlobals.USER_TYPE == 1) {
+                            DeviceListFragment.randomTextView.removeAll();
+                            DeviceListFragment.radarScanView.stopRadar();
+                        } else {
+                            DeviceListFragment.rippleView.stopRippleAnimation();
+                        }
+                    }
+
+
+                    @Override
+                    public void onFailure(int i) {
+
+                    }
+                });
+
+            }
+        }, 1000*60);
+        if (manual)
+        if (AppGlobals.USER_TYPE == 1) {
+            DeviceListFragment.randomTextView.startAnimation();
+            DeviceListFragment.radarScanView.startAnimation();
+        } else {
+            DeviceListFragment.rippleView.startRippleAnimation();
+        }
     }
 
     @Override
     public void showDetails(WifiP2pDevice device) {
-        fragment = (DeviceDetailFragment) getSupportFragmentManager()
+        fragment = (DeviceDetailFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_detail);
         fragment.showDetails(device);
-
     }
 
     @Override
@@ -173,7 +213,6 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
             @Override
             public void onFailure(int reason) {
-                Log.i("TAG", "error code " + reason);
                 Log.i("TAG", "failure" + Utils.getP2pStatus(reason));
                 Toast.makeText(WifiActivity.this, "Connect failed. Retry.",
                         Toast.LENGTH_SHORT).show();
@@ -183,19 +222,22 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     public void disconnect() {
-        fragment = (DeviceDetailFragment) getSupportFragmentManager()
+        fragment = (DeviceDetailFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_detail);
         fragment.resetViews();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
 
             @Override
             public void onFailure(int reasonCode) {
-                Log.d(getClass().getName(), "Disconnect failed. Reason :" + reasonCode);
+                Log.d(TAG, "Disconnect failed. Reason :" + reasonCode);
 
             }
 
             @Override
             public void onSuccess() {
+                NotificationManager notificationManager = (NotificationManager)
+                        getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.cancel(100011);
                 fragment.getView().setVisibility(View.GONE);
             }
 
@@ -251,6 +293,5 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 });
             }
         }
-
     }
 }

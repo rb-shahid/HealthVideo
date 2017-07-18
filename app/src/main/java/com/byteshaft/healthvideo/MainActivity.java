@@ -35,7 +35,8 @@ import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.utils.CustomTypefaceSpan;
-import com.byteshaft.healthvideo.wifi.WifiActivity;
+
+import static com.byteshaft.healthvideo.wifi.WifiActivity.receiver;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -138,6 +139,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+            unregisterReceiver(receiver);
         }
     }
 
@@ -173,7 +175,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_wifi_connection) {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wifiManager.isWifiEnabled()) {
-                startActivity(new Intent(getApplicationContext(), WifiActivity.class));
+                startActivity(new Intent(getApplicationContext(), com.byteshaft.healthvideo.wifi.WifiActivity.class));
             } else {
                 Snackbar.make(findViewById(android.R.id.content), "Wifi Disabled!", Snackbar.LENGTH_SHORT).show();
             }

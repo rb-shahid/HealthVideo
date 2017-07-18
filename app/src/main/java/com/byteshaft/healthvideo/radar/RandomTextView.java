@@ -18,7 +18,6 @@ import java.util.Random;
 import java.util.Vector;
 
 
-
 public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGlobalLayoutListener {
 
     private static final String tag = RandomTextView.class.getSimpleName();

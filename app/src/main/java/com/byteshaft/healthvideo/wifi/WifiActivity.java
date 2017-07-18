@@ -137,7 +137,6 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 }
                 final DeviceListFragment fragment = (DeviceListFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.frag_list);
-                fragment.onInitiateDiscovery();
                 initiateDiscovery(true);
                 return true;
             default:
@@ -158,6 +157,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
             public void onFailure(int reasonCode) {
                 Toast.makeText(WifiActivity.this, "Discovery Failed : " + reasonCode,
                         Toast.LENGTH_SHORT).show();
+                AppGlobals.getNotificationManager().cancel(AppGlobals.NOTIFICATION_ID);
             }
         });
         new android.os.Handler().postDelayed(new Runnable() {
@@ -174,6 +174,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                         } else {
                             DeviceListFragment.rippleView.stopRippleAnimation();
                         }
+                        AppGlobals.getNotificationManager().cancel(AppGlobals.NOTIFICATION_ID);
                     }
 
 

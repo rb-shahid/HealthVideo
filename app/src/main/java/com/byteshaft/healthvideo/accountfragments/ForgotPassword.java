@@ -52,7 +52,8 @@ public class ForgotPassword extends Fragment implements View.OnClickListener, Ht
             case android.R.id.home:
                 getFragmentManager().popBackStack();
                 return true;
-            default:return false;
+            default:
+                return false;
         }
     }
 
@@ -86,7 +87,7 @@ public class ForgotPassword extends Fragment implements View.OnClickListener, Ht
         request = new HttpRequest(getActivity());
         request.setOnReadyStateChangeListener(this);
         request.setOnErrorListener(this);
-        request.open("GET", String.format("%sforgotpassword?email="+email, AppGlobals.BASE_URL));
+        request.open("GET", String.format("%sforgotpassword?email=" + email, AppGlobals.BASE_URL));
         request.send();
         Helpers.showProgressDialog(getActivity(), "Processing...");
     }

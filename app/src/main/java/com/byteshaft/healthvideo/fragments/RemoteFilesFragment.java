@@ -213,7 +213,6 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     }
 
     private void getRemoteFiles() {
-//        Helpers.showSnackBar(getView(), getResources().getString(R.string.loading_videos));
         HttpRequest request = new HttpRequest(getActivity());
         request.setOnReadyStateChangeListener(this);
         request.setOnErrorListener(this);
@@ -384,33 +383,25 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 URL url = new URL(sUrl[0]);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
-
-                // expect HTTP 200 OK, so we don't mistakenly save error report
-                // instead of the file
                 if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                     return "Server returned HTTP " + connection.getResponseCode()
                             + " " + connection.getResponseMessage();
                 }
 
-                // this will be useful to display download percentage
-                // might be -1: server did not report the length
                 int fileLength = connection.getContentLength();
 
-                // download the file
                 input = connection.getInputStream();
                 output = new FileOutputStream(directory+"/"+downloadingNow.get(counter)+"|"+sUrl[2]+"."+sUrl[1]);
                 byte data[] = new byte[4096];
                 long total = 0;
                 int count;
                 while ((count = input.read(data)) != -1) {
-                    // allow canceling with back button
                     if (isCancelled()) {
                         input.close();
                         return null;
                     }
                     total += count;
-                    // publishing the progress....
-                    if (fileLength > 0) // only if total length is known
+                    if (fileLength > 0)
                         publishProgress((int) (total * 100 / fileLength));
                     output.write(data, 0, count);
                 }

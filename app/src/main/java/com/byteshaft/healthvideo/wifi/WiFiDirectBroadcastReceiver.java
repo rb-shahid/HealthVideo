@@ -50,11 +50,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
         this.activity = activity;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see android.content.BroadcastReceiver#onReceive(android.content.Context,
-     * android.content.Intent)
-     */
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();

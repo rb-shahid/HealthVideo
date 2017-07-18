@@ -23,8 +23,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -108,9 +106,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         return mContentView;
     }
 
-    /**
-     * @return this device
-     */
+
     public WifiP2pDevice getDevice() {
         return device;
     }
@@ -122,19 +118,16 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                 if (WifiActivity.stateMenu != null) {
                     WifiActivity.stateMenu.setIcon(R.mipmap.wifi_off);
                 }
-//                state.setTextColor(getResources().getColor(android.R.color.holo_green_light));
                 return "Available";
             case WifiP2pDevice.INVITED:
                 if (WifiActivity.stateMenu != null) {
                     WifiActivity.stateMenu.setIcon(R.mipmap.wifi_off);
                 }
-//                state.setTextColor(getResources().getColor(android.R.color.holo_blue_light));
                 return "Invited";
             case WifiP2pDevice.CONNECTED:
                 if (WifiActivity.stateMenu != null) {
                     WifiActivity.stateMenu.setIcon(R.mipmap.wifi_on);
                 }
-//                state.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
                 return "Connected";
             case WifiP2pDevice.FAILED:
                 if (WifiActivity.stateMenu != null) {
@@ -158,11 +151,6 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
     public void stateNotification(String state) {
         Intent resultIntent =
                 new Intent(getActivity(), MainActivity.class);
-//        resultIntent.putExtra("notification", true);
-//        resultIntent.putExtra("sender_id", senderId);
-//        resultIntent.putExtra("status", chatStatus);
-//        resultIntent.putExtra("name", senderName);
-//        resultIntent.putExtra("image_url", AppGlobals.SERVER_IP + senderImageUrl);
 
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
@@ -183,8 +171,6 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                         "Disconnect", resultPendingIntent)
                         .build();
 
-        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
         Notification newMessageNotification =
                 new NotificationCompat.Builder(AppGlobals.getContext())
                         .setColor(ContextCompat.getColor(AppGlobals.getContext(), android.R.color.white))
@@ -198,76 +184,16 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                 (NotificationManager)
                         AppGlobals.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
-        notificationManager.notify(100011,
+        notificationManager.notify(AppGlobals.NOTIFICATION_ID,
                 newMessageNotification);
     }
 
-//    /**
-//     * Initiate a connection with the peer.
-//     */
-//    @Override
-//    public void onListItemClick(ListView l, View v, int position, long id) {
-//        WifiP2pDevice device = (WifiP2pDevice) getListAdapter().getItem(position);
-//        ((DeviceActionListener) getActivity()).showDetails(device);
-//    }`
-
-//    /**
-//     * Array adapter for ListFragment that maintains WifiP2pDevice list.
-//     */
-//    private class WiFiPeerListAdapter extends ArrayAdapter<WifiP2pDevice> {
-//
-//        private List<WifiP2pDevice> items;
-//
-//        /**
-//         * @param context
-//         * @param textViewResourceId
-//         * @param objects
-//         */
-//        public WiFiPeerListAdapter(Context context, int textViewResourceId,
-//                List<WifiP2pDevice> objects) {
-//            super(context, textViewResourceId, objects);
-//            items = objects;
-//
-//        }
-//
-//        @Override
-//        public View getView(int position, View convertView, ViewGroup parent) {
-//            View v = convertView;
-//            if (v == null) {
-//                LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(
-//                        Context.LAYOUT_INFLATER_SERVICE);
-//                v = vi.inflate(R.layout.row_devices, null);
-//            }
-//            WifiP2pDevice device = items.get(position);
-//            if (device != null) {
-//                TextView top = (TextView) v.findViewById(R.id.device_name);
-//                TextView bottom = (TextView) v.findViewById(R.id.device_details);
-//                if (top != null) {
-//                    top.setText(device.deviceName);
-//                }
-//                if (bottom != null) {
-//                    bottom.setText(getDeviceStatus(device.status));
-//                }
-//            }
-//            return v;
-//
-//        }
-//    }
-    /**
-     * Update UI for this device.
-     * 
-     * @param device WifiP2pDevice object
-     */
     public void updateThisDevice(WifiP2pDevice device) {
         this.device = device;
         String[] name = device.deviceName.split("_");
         myDevice.setText("My Device: "+name[0]);
         state.setText(getDeviceStatus(device.status));
         stateNotification(getDeviceStatus(device.status));
-//        TextView view = (TextView) mContentView.findViewById(R.id.my_name);
-//        view.setText(device.deviceName);
-//        view = (TextView) mContentView.findViewById(R.id.my_status);
-//        view.setText(getDeviceStatus(device.status));
     }
 
     @Override
@@ -291,37 +217,10 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                 return;
             }
         }
-//        for (WifiP2pDevice wifiP2pDevice : peerList.getDeviceList()) {
-//            Log.i("TAG", "device :" + wifiP2pDevice.deviceName);
-//        }
-//        ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
-//        if (peers.size() == 0) {
-//            Log.d(WifiActivity.TAG, "No devices found");
-//            return;
-//        }
-
     }
 
     public void clearPeers() {
         peers.clear();
-//        ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
-    }
-
-    /**
-     * 
-     */
-    public void onInitiateDiscovery() {
-//        if (progressDialog != null && progressDialog.isShowing()) {
-//            progressDialog.dismiss();
-//        }
-//        progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel", "finding peers", true,
-//                true, new DialogInterface.OnCancelListener() {
-//
-//                    @Override
-//                    public void onCancel(DialogInterface dialog) {
-//
-//                    }
-//                });
     }
 
     /**

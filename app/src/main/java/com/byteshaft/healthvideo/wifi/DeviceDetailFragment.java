@@ -55,7 +55,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	public static int PORT = 8988;
 	private static boolean server_running = false;
 
-	protected static final int CHOOSE_FILE_RESULT_CODE = 20;
 	private View mContentView = null;
 	private WifiP2pDevice device;
 	private WifiP2pInfo info;
@@ -97,20 +96,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 						((DeviceListFragment.DeviceActionListener) getActivity()).disconnect();
 					}
 				});
-
-//		mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
-//				new View.OnClickListener() {
-//
-//					@Override
-//					public void onClick(View v) {
-//						// Allow user to pick an image from Gallery or other
-//						// registered apps
-//						Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//						intent.setType("image/*");
-//						startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
-//					}
-//				});
-
 		return mContentView;
 	}
 
@@ -147,19 +132,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 		}
 		this.info = info;
 		this.getView().setVisibility(View.VISIBLE);
-
-//		// The owner IP is now known.
-//		TextView view = (TextView) mContentView.findViewById(R.id.group_owner);
-//		view.setText(getResources().getString(R.string.group_owner_text)
-//				+ ((info.isGroupOwner == true) ? getResources().getString(R.string.yes)
-//						: getResources().getString(R.string.no)));
-//
-//		// InetAddress from WifiP2pInfo struct.
-//		view = (TextView) mContentView.findViewById(R.id.device_info);
-//		view.setText("Group Owner IP - " + info.groupOwnerAddress.getHostAddress());
-
-//		mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-
 		if (!server_running){
 			new ServerAsyncTask(getActivity()).execute();
 			server_running = true;
@@ -176,40 +148,17 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	public void showDetails(WifiP2pDevice device) {
 		this.device = device;
 		this.getView().setVisibility(View.VISIBLE);
-//		TextView view = (TextView) mContentView.findViewById(R.id.device_address);
-//		view.setText(device.deviceAddress);
-//		view = (TextView) mContentView.findViewById(R.id.device_info);
-//		view.setText(device.toString());
 	}
 
-	/**
-	 * Clears the UI fields after a disconnect or direct mode disable operation.
-	 */
 	public void resetViews() {
 		mContentView.findViewById(R.id.btn_connect).setVisibility(View.VISIBLE);
-//		TextView view = (TextView) mContentView.findViewById(R.id.device_address);
-//		view.setText(R.string.empty);
-//		view = (TextView) mContentView.findViewById(R.id.device_info);
-//		view.setText(R.string.empty);
-//		view = (TextView) mContentView.findViewById(R.id.group_owner);
-//		view.setText(R.string.empty);
-//		view = (TextView) mContentView.findViewById(R.id.status_text);
-//		view.setText(R.string.empty);
 		this.getView().setVisibility(View.GONE);
 	}
 
-	/**
-	 * A simple server socket that accepts connection and writes some data on
-	 * the stream.
-	 */
 
 	public static class ServerAsyncTask extends AsyncTask<Void, Void, String> {
 
 		private final Context context;
-
-		/**
-		 * @param context
-		 */
 
 		public ServerAsyncTask(Context context) {
 			this.context = context;
@@ -243,26 +192,14 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-		 */
 		@Override
 		protected void onPostExecute(String result) {
 			if (result != null) {
 				Log.i("TAG", "completed");
-//				Intent intent = new Intent();
-//				intent.setAction(android.content.Intent.ACTION_VIEW);
-//				intent.setDataAndType(Uri.parse("file://" + result), "image/*");
-//				context.startActivity(intent);
 			}
 
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see android.os.AsyncTask#onPreExecute()
-		 */
 		@Override
 		protected void onPreExecute() {
 

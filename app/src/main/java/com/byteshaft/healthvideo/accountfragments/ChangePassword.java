@@ -24,7 +24,7 @@ import java.net.HttpURLConnection;
  * Created by s9iper1 on 6/16/17.
  */
 
-public class ChangePassword  extends AppCompatActivity implements View.OnClickListener, HttpRequest.OnErrorListener,
+public class ChangePassword extends AppCompatActivity implements View.OnClickListener, HttpRequest.OnErrorListener,
         HttpRequest.OnReadyStateChangeListener {
 
     private EditText oldPassword;
@@ -61,7 +61,8 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
             case android.R.id.home:
                 onBackPressed();
                 return true;
-            default:return false;
+            default:
+                return false;
         }
     }
 
@@ -158,5 +159,4 @@ public class ChangePassword  extends AppCompatActivity implements View.OnClickLi
         }
 
     }
-
 }

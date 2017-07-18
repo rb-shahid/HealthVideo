@@ -19,12 +19,6 @@ public class Utils {
 	private final static String p2pInt = "p2p-p2p0";
 
 	public static String getIPFromMac(String MAC) {
-		/*
-		 * method modified from:
-		 * 
-		 * http://www.flattermann.net/2011/02/android-howto-find-the-hardware-mac-address-of-a-remote-host/
-		 * 
-		 * */
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader("/proc/net/arp"));
@@ -113,12 +107,7 @@ public class Utils {
 	}
 
 	private static String getDottedDecimalIP(byte[] ipAddr) {
-		/*
-		 * ripped from:
-		 * 
-		 * http://stackoverflow.com/questions/10053385/how-to-get-each-devices-ip-address-in-wifi-direct-scenario
-		 * 
-		 * */
+
 		String ipAddrStr = "";
 		for (int i=0; i<ipAddr.length; i++) {
 			if (i > 0) {

@@ -137,7 +137,6 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 }
                 final DeviceListFragment fragment = (DeviceListFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.frag_list);
-                fragment.onInitiateDiscovery();
                 initiateDiscovery(true);
                 return true;
             default:

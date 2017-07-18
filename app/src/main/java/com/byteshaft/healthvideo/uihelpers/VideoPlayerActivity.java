@@ -56,8 +56,6 @@ public class VideoPlayerActivity extends Activity {
         player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
         simpleExoPlayerView.setPlayer(player);
         player.setPlayWhenReady(shouldAutoPlay);
-/*        MediaSource mediaSource = new HlsMediaSource(Uri.parse("https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"),
-                mediaDataSourceFactory, mainHandler, null);*/
 
         DefaultExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
         MediaSource mediaSource = new ExtractorMediaSource(Uri.parse(path),

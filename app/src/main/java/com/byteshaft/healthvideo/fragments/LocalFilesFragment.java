@@ -138,9 +138,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                     Log.i("TAG", "to be delete"+ file.getAbsolutePath());
                     if (file.delete())
                         Log.i("TAG", String.valueOf(Integer.parseInt(value[2])));
-//                    dataFileArrayList.remove((Integer.parseInt(value[2])));
                     delete.add(Integer.parseInt(value[2]));
-//                    localFileFilesAdapter.notifyDataSetChanged();
                     Log.i("TAG", "Name "+key+" " + value[0]+" "+value[1]);
                     alreadyExistFiles.remove(value[3]+value[0]+"."+value[1]);
                 }

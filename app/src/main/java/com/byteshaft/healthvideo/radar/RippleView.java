@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
-
 public class RippleView extends TextView {
 
     private static final String tag = RippleView.class.getSimpleName();

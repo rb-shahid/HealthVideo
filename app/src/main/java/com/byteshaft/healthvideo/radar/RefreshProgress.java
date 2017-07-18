@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 
-
 public class RefreshProgress extends View {
     private static final String tag = "RefreshProgress";
 

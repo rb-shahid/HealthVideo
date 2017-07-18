@@ -6,7 +6,7 @@ import android.view.animation.Transformation;
 
 
 /**
- * Created by 郭攀峰 on 2015/11/22.
+ * Created by s9iper1 on 2015/11/22.
  */
 public class LinearAnimation extends Animation
 {

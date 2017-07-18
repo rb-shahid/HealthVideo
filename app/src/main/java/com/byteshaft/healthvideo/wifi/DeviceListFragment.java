@@ -158,11 +158,6 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
     public void stateNotification(String state) {
         Intent resultIntent =
                 new Intent(getActivity(), MainActivity.class);
-//        resultIntent.putExtra("notification", true);
-//        resultIntent.putExtra("sender_id", senderId);
-//        resultIntent.putExtra("status", chatStatus);
-//        resultIntent.putExtra("name", senderName);
-//        resultIntent.putExtra("image_url", AppGlobals.SERVER_IP + senderImageUrl);
 
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
@@ -254,7 +249,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 //    }
     /**
      * Update UI for this device.
-     * 
+     *
      * @param device WifiP2pDevice object
      */
     public void updateThisDevice(WifiP2pDevice device) {

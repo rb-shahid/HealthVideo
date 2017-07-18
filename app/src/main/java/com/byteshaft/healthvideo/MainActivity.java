@@ -36,8 +36,6 @@ import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.utils.CustomTypefaceSpan;
 
-import static com.byteshaft.healthvideo.wifi.WifiActivity.receiver;
-
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -139,7 +137,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
-            unregisterReceiver(receiver);
+
         }
     }
 

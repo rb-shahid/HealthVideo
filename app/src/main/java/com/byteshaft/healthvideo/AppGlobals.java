@@ -1,6 +1,7 @@
 package com.byteshaft.healthvideo;
 
 import android.app.Application;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -25,6 +26,8 @@ public class AppGlobals extends Application {
     public static Typeface boldTypeFace;
     public static Typeface normalTypeFace;
     public static Typeface moreBold;
+    public static final int NOTIFICATION_ID = 100011;
+    private static NotificationManager notificationManager;
 
     @Override
     public void onCreate() {
@@ -33,7 +36,11 @@ public class AppGlobals extends Application {
         boldTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/bold.ttf");
         normalTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/simple.ttf");
         moreBold = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/more_bold.ttf");
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    }
 
+    public static NotificationManager getNotificationManager() {
+        return notificationManager;
     }
 
     public static Context getContext() {

@@ -184,7 +184,6 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                         .build();
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
         Notification newMessageNotification =
                 new NotificationCompat.Builder(AppGlobals.getContext())
                         .setColor(ContextCompat.getColor(AppGlobals.getContext(), android.R.color.white))
@@ -198,7 +197,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                 (NotificationManager)
                         AppGlobals.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
-        notificationManager.notify(100011,
+        notificationManager.notify(AppGlobals.NOTIFICATION_ID,
                 newMessageNotification);
     }
 

@@ -15,18 +15,18 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <Button
+            <android.support.v7.widget.AppCompatButton
                 android:id="@+id/btn_connect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="5dp"
                 android:text="@string/connect_peer_button"
-                style="?android:attr/buttonBarButtonStyle"
                 />
-            <Button
+            <android.support.v7.widget.AppCompatButton
                 android:id="@+id/btn_disconnect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                style="?android:attr/buttonBarButtonStyle"
+                android:padding="5dp"
                 android:text="@string/disconnect_peer_button" />
         </LinearLayout>
         <!--<TextView-->

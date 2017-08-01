@@ -7,8 +7,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.serializers.DataFile;
@@ -36,6 +38,8 @@ public class FileTransferService extends IntentService {
 	public static final String EXTRAS_DATA_FILES = "data_files";
 	public static final String EXTRAS_ADDRESS = "go_host";
 	public static final String EXTRAS_PORT = "go_port";
+	private Handler mMainThreadHandler = null;
+
 
 	public FileTransferService(String name) {
 		super(name);
@@ -51,7 +55,7 @@ public class FileTransferService extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
-
+		mMainThreadHandler = new Handler(getMainLooper());
 		Context context = getApplicationContext();
 		if (intent.getAction().equals(ACTION_SEND_FILE)) {
 			String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
@@ -95,7 +99,6 @@ public class FileTransferService extends IntentService {
 			String host = intent.getExtras().getString(EXTRAS_ADDRESS);
 			Socket socket = new Socket();
 			int port = intent.getExtras().getInt(EXTRAS_PORT);
-
 			try {
 				Log.d(getClass().getSimpleName(), "Opening client socket - ");
 				socket.bind(null);
@@ -106,6 +109,12 @@ public class FileTransferService extends IntentService {
 				stream.writeByte(AppGlobals.DATA_TYPE_ARRAY);
 				stream.writeObject(fileUri);
 				Log.d(getClass().getSimpleName(), "Client: Data written");
+				mMainThreadHandler.post(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(AppGlobals.getContext(), "sent", Toast.LENGTH_SHORT).show();
+					}
+				});
 			} catch (IOException e) {
 				Log.e(getClass().getSimpleName(), e.getMessage());
 			} finally {

@@ -143,7 +143,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
         }
     }
 
-    public static void initiateDiscovery(boolean manual) {
+    public void initiateDiscovery(boolean manual) {
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
 
             @Override
@@ -248,6 +248,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                         getSystemService(Context.NOTIFICATION_SERVICE);
                 notificationManager.cancel(100011);
                 fragment.getView().setVisibility(View.GONE);
+                AppGlobals.CURRENT_STATE = "Disconnected";
             }
 
         });

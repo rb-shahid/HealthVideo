@@ -120,7 +120,6 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                 });
     }
 
-
     public WifiP2pDevice getDevice() {
         return device;
     }

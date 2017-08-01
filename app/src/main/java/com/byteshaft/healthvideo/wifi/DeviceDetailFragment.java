@@ -34,6 +34,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
@@ -268,6 +269,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 							if (fileArrayList.size() > 0) {
 								Server.remoteFileArrayList = fileArrayList;
 								Log.i("TAG", "received " + fileArrayList.size());
+                                getInstance().getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(context, "Received", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
 							}
 						} catch (ClassNotFoundException e) {
 							e.printStackTrace();

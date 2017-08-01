@@ -37,13 +37,14 @@ public class AppGlobals extends Application {
     public static final int DATA_TYPE_ARRAY = 0;
     public static final int DATA_TYPE_REQUESTED_ARRAY = 1;
     public static String clientIp = "";
-    public static ArrayList<DataFile> dataFileArrayList;
+    public static ArrayList<DataFile> requestedFileArrayList;
+    public static int senderCounter = 0;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
-        dataFileArrayList = new ArrayList<>();
+        requestedFileArrayList = new ArrayList<>();
         sContext = getApplicationContext();
         boldTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/bold.ttf");
         normalTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/simple.ttf");

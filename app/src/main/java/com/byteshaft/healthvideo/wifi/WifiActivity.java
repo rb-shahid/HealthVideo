@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -20,6 +21,11 @@ import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
+import com.byteshaft.healthvideo.serializers.DataFile;
+
+import static com.byteshaft.healthvideo.MainActivity.wifiP2pDevice;
+import static com.byteshaft.healthvideo.wifi.DeviceDetailFragment.IP_SERVER;
+import static com.byteshaft.healthvideo.wifi.DeviceDetailFragment.PORT;
 
 
 public class WifiActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, DeviceListFragment.DeviceActionListener {
@@ -58,7 +64,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
         if (getIntent().getExtras() != null) {
             if (getIntent().getExtras().getBoolean("send_file")) {
-                Log.e(getClass().getSimpleName(), "send files");
+                sendRequestedFiles();
             }
         }
 
@@ -238,9 +244,11 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     public void disconnect() {
-        fragment = (DeviceDetailFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_detail);
-        fragment.resetViews();
+        if (DeviceDetailFragment.foreground) {
+            fragment = (DeviceDetailFragment) getFragmentManager()
+                    .findFragmentById(R.id.frag_detail);
+            fragment.resetViews();
+        }
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
 
             @Override
@@ -296,7 +304,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(WifiActivity.this, "Aborting connection",
+                        Toast.makeText(WifiActivity.this, R.string.connection_abort,
                                 Toast.LENGTH_SHORT).show();
                     }
 
@@ -310,4 +318,37 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
             }
         }
     }
+
+    public void sendRequestedFiles() {
+        DataFile dataFile = AppGlobals.requestedFileArrayList.get(AppGlobals.senderCounter);
+        Log.i(getClass().getSimpleName(), dataFile.getUrl());
+        sendFile(dataFile.getUrl());
+
+    }
+
+    public void sendFile(String filePath) {
+        String localIP = Utils.getIPAddress(true);
+        // Trick to find the ip in the file /proc/net/arp
+        String client_mac_fixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
+        String clientIP = Utils.getIPFromMac(client_mac_fixed);
+        // User has picked an image. Transfer it to group owner i.e peer using
+        // FileTransferService.
+        Uri uri = Uri.parse(filePath);
+//		TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
+//		statusText.setText("Sending: " + uri);
+        Log.d(WifiActivity.TAG, "Intent----------- " + uri);
+        Intent serviceIntent = new Intent(AppGlobals.getContext(), FileTransferService.class);
+        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH,"file://" +uri.toString());
+        Log.i("TAG","local ip"+  String.valueOf(localIP == null));
+        Log.i("TAG","Server ip" +String.valueOf(IP_SERVER == null));
+        if(localIP.equals(IP_SERVER)){
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
+        }else{
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
+        }
+        serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
+        startService(serviceIntent);
+    }
+
 }

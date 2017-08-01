@@ -21,20 +21,15 @@ import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
-import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.AppCompatButton;
-import android.text.Html;
 import android.util.Log;
-import android.util.StringBuilderPrinter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
-import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
-import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.serializers.DataFile;
 
@@ -43,12 +38,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.logging.Logger;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -67,7 +60,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	private static DeviceDetailFragment instance;
 	private AppCompatButton sendFilesButton;
 	private ArrayList<DataFile> dataFileArrayList;
-	private static boolean foreground = false;
+	public static boolean foreground = false;
 
 	public static DeviceDetailFragment getInstance() {
 		return instance;
@@ -132,32 +125,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 		foreground = false;
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		String localIP = Utils.getIPAddress(true);
-		// Trick to find the ip in the file /proc/net/arp
-		String client_mac_fixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
-		String clientIP = Utils.getIPFromMac(client_mac_fixed);
-		// User has picked an image. Transfer it to group owner i.e peer using
-		// FileTransferService.
-		Uri uri = data.getData();
-//		TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
-//		statusText.setText("Sending: " + uri);
-		Log.d(WifiActivity.TAG, "Intent----------- " + uri);
-		Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-		serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-		serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-		Log.i("TAG","local ip"+  String.valueOf(localIP == null));
-		Log.i("TAG","Server ip" +String.valueOf(IP_SERVER == null));
-		if(localIP.equals(IP_SERVER)){
-			serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
-		}else{
-			serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
-		}
-		serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
-		getActivity().startService(serviceIntent);
-	}
-
 	private void sendLocalFilesToNurse() {
 		dataFileArrayList = new ArrayList<>();
 		File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
@@ -179,6 +146,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
 		String localIP = Utils.getIPAddress(true);
 		// Trick to find the ip in the file /proc/net/arp
+        if (wifiP2pDevice == null) {
+            Toast.makeText(getActivity(), R.string.try_turning_wifi_off_on, Toast.LENGTH_SHORT).show();
+        }
 		String clientMacFixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
 		String clientIP = Utils.getIPFromMac(clientMacFixed);
 		Log.d(WifiActivity.TAG, "sending ----------- files " + dataFileArrayList.size());
@@ -245,20 +215,20 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 				Logger.getLogger("Do in Background 2").info(client.getInetAddress().toString());
 				AppGlobals.clientIp = client.getInetAddress().getHostAddress();
 				getArrayFromStream(client);
-//				Log.d(WifiActivity.TAG, "Server: connection done");
-//				final File f = new File(Environment.getExternalStorageDirectory() + "/"
-//						+ context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-//						+ ".jpg");
-//
-//				File dirs = new File(f.getParent());
-//				if (!dirs.exists())
-//					dirs.mkdirs();
-//				f.createNewFile();
-//
-//				Log.d(WifiActivity.TAG, "server: copying files " + f.toString());
-//				InputStream inputstream = client.getInputStream();
-//				copyFile(inputstream, new FileOutputStream(f));
-//				serverSocket.close();
+				Log.d(WifiActivity.TAG, "Server: connection done");
+				final File f = new File(Environment.getExternalStorageDirectory() + "/"
+						+ context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
+						+ ".jpg");
+
+				File dirs = new File(f.getParent());
+				if (!dirs.exists())
+					dirs.mkdirs();
+				f.createNewFile();
+
+				Log.d(WifiActivity.TAG, "server: copying files " + f.toString());
+				InputStream inputstream = client.getInputStream();
+				copyFile(inputstream, new FileOutputStream(f));
+				serverSocket.close();
 				server_running = false;
 				return "";
 			} catch (IOException e) {
@@ -283,7 +253,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                                 getInstance().getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Toast.makeText(context, "Received", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(context, R.string.received, Toast.LENGTH_SHORT).show();
                                     }
                                 });
 							}
@@ -297,7 +267,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 							ArrayList<DataFile> fileArrayList = (ArrayList<DataFile>) dIn.readObject();
 							final StringBuilder stringBuilder = new StringBuilder();
 							if (fileArrayList.size() > 0) {
-								AppGlobals.dataFileArrayList = fileArrayList;
+								AppGlobals.requestedFileArrayList = fileArrayList;
 								for (DataFile dataFile : fileArrayList) {
 									stringBuilder.append(dataFile.getTitle());
                                     stringBuilder.append(".");
@@ -308,21 +278,22 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 								getInstance().getActivity().runOnUiThread(new Runnable() {
 									@Override
 									public void run() {
-										Toast.makeText(context, "Request Received", Toast.LENGTH_SHORT).show();
+										Toast.makeText(context, R.string.request_received, Toast.LENGTH_SHORT).show();
 										if (foreground) {
 											AlertDialog alertDialog;
 											AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new android.view.ContextThemeWrapper(getInstance().getActivity(), R.style.myDialog));
-											alertDialogBuilder.setTitle("Files Request");
+											alertDialogBuilder.setTitle(R.string.file_request);
 											alertDialogBuilder.setIcon(R.mipmap.folder);
 											alertDialogBuilder.setMessage(stringBuilder.toString()).setCancelable(false)
-													.setPositiveButton("Send", new DialogInterface.OnClickListener() {
+													.setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
 														public void onClick(DialogInterface dialog, int id) {
+                                                            WifiActivity.getInstance().sendRequestedFiles();
 															dialog.dismiss();
 
 
 														}
 													});
-											alertDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+											alertDialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
 												@Override
 												public void onClick(DialogInterface dialogInterface, int i) {
 													dialogInterface.dismiss();
@@ -413,7 +384,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                         .setColor(ContextCompat.getColor(AppGlobals.getContext(), android.R.color.white))
                         .setLargeIcon(BitmapFactory.decodeResource(AppGlobals.getContext().getResources(), drawable))
                         .setSmallIcon(drawable)
-                        .setContentTitle("Files Request")
+                        .setContentTitle(AppGlobals.getContext()
+                                .getResources().getString(R.string.file_request))
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(filesName))
                         .addAction(replyAction).build();

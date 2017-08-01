@@ -25,12 +25,11 @@ import com.byteshaft.healthvideo.R;
 public class WifiActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, DeviceListFragment.DeviceActionListener {
 
     public static final String TAG = "wifidirectdemo";
-    private WifiP2pManager manager;
+    private static WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
-
     private final IntentFilter intentFilter = new IntentFilter();
-    private WifiP2pManager.Channel channel;
+    private static WifiP2pManager.Channel channel;
     public static BroadcastReceiver receiver = null;
     private DeviceDetailFragment fragment;
     public static MenuItem stateMenu;
@@ -128,7 +127,6 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                     Log.e(TAG, "channel or manager is null");
                 }
                 return true;
-
             case R.id.atn_direct_discover:
                 if (!isWifiP2pEnabled) {
                     Toast.makeText(WifiActivity.this, "p2p",
@@ -144,55 +142,63 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
         }
     }
 
-    public void initiateDiscovery(boolean manual) {
+    public static void initiateDiscovery(boolean manual) {
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
 
             @Override
             public void onSuccess() {
-                Toast.makeText(WifiActivity.this, "Discovery Initiated",
+                Toast.makeText(AppGlobals.getContext(), "Discovery Initiated",
                         Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onFailure(int reasonCode) {
-                Toast.makeText(WifiActivity.this, "Discovery Failed : " + reasonCode,
+                Toast.makeText(AppGlobals.getContext(), "Discovery Failed : " + reasonCode,
                         Toast.LENGTH_SHORT).show();
                 AppGlobals.getNotificationManager().cancel(AppGlobals.NOTIFICATION_ID);
             }
         });
-        new android.os.Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(WifiActivity.this, "Discovery Stop",
-                                Toast.LENGTH_SHORT).show();
-                        if (AppGlobals.USER_TYPE == 1) {
-                            DeviceListFragment.randomTextView.removeAll();
-                            DeviceListFragment.radarScanView.stopRadar();
-                        } else {
-                            DeviceListFragment.rippleView.stopRippleAnimation();
-                        }
-                        AppGlobals.getNotificationManager().cancel(AppGlobals.NOTIFICATION_ID);
-                    }
-
-
-                    @Override
-                    public void onFailure(int i) {
-
-                    }
-                });
-
-            }
-        }, 1000*60);
+        stopDiscovery();
         if (manual)
         if (AppGlobals.USER_TYPE == 1) {
-            DeviceListFragment.randomTextView.startAnimation();
+            DeviceListFragment.getInstance().start();
             DeviceListFragment.radarScanView.startAnimation();
         } else {
             DeviceListFragment.rippleView.startRippleAnimation();
         }
+    }
+
+    public static void stopDiscovery() {
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (AppGlobals.CURRENTSTATE.equals("Connected")) {
+                    if (manager != null && channel != null) {
+                        manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
+                            @Override
+                            public void onSuccess() {
+                                Toast.makeText(AppGlobals.getContext(), "Discovery Stop",
+                                        Toast.LENGTH_SHORT).show();
+                                if (AppGlobals.USER_TYPE == 1) {
+                                    DeviceListFragment.randomTextView.removeAll();
+                                    DeviceListFragment.radarScanView.stopRadar();
+                                } else {
+                                    DeviceListFragment.rippleView.stopRippleAnimation();
+                                }
+                                AppGlobals.getNotificationManager().cancel(AppGlobals.NOTIFICATION_ID);
+                            }
+
+                            @Override
+                            public void onFailure(int i) {
+
+                            }
+                        });
+                    }
+                }else {
+                    stopDiscovery();
+                }
+            }
+        }, 1000*60);
     }
 
     @Override
@@ -262,7 +268,6 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     public void cancelDisconnect() {
-
         /*
          * A cancel abort request by user. Disconnect i.e. removeGroup if
          * already connected. Else, request WifiP2pManager to abort the ongoing

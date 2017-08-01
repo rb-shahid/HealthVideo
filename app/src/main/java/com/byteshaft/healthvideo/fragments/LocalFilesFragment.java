@@ -188,7 +188,6 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                 viewHolder = new ViewHolder();
                 viewHolder.fileName = (TextView) convertView.findViewById(R.id.name);
                 viewHolder.relativeLayout = (RelativeLayout) convertView.findViewById(R.id.relative_layout);
-                viewHolder.openButton = (Button) convertView.findViewById(R.id.open);
                 viewHolder.fileName.setTypeface(AppGlobals.normalTypeFace);
                 convertView.setTag(viewHolder);
             } else {
@@ -224,18 +223,18 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                             .getColor(android.R.color.black));
                     viewHolder.relativeLayout.setBackgroundColor(getResources().getColor(android.R.color.white));
             }
-            viewHolder.openButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    DataFile dataFile = arrayList.get(position);
-                    if (dataFile.getExtension().equals("3gp") || dataFile.getExtension().equals("mp4") ||
-                            dataFile.getExtension().equals("mkv") || dataFile.getExtension().equals("mov")) {
-                        Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
-                        intent.putExtra("path", dataFile.getUrl());
-                        startActivity(intent);
-                    }
-                }
-            });
+//            viewHolder.openButton.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    DataFile dataFile = arrayList.get(position);
+//                    if (dataFile.getExtension().equals("3gp") || dataFile.getExtension().equals("mp4") ||
+//                            dataFile.getExtension().equals("mkv") || dataFile.getExtension().equals("mov")) {
+//                        Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
+//                        intent.putExtra("path", dataFile.getUrl());
+//                        startActivity(intent);
+//                    }
+//                }
+//            });
 
             return convertView;
         }
@@ -249,6 +248,5 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     private class ViewHolder {
         TextView fileName;
         RelativeLayout relativeLayout;
-        Button openButton;
     }
 }

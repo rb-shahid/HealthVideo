@@ -58,13 +58,18 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     private ProgressDialog progressDialog = null;
-    private View mContentView = null;
+    private static View mContentView = null;
     private WifiP2pDevice device;
     private TextView myDevice;
     private TextView state;
     public static RippleView rippleView;
     public static RandomTextView randomTextView;
     public static RadarScanView radarScanView;
+    private static DeviceListFragment instance;
+
+    public static DeviceListFragment getInstance() {
+        return instance;
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -79,22 +84,13 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         } else {
             mContentView = inflater.inflate(R.layout.wifi_connection_nurse_ui, null);
         }
+        instance = this;
         state = (TextView) mContentView.findViewById(R.id.state);
         state.setTypeface(AppGlobals.boldTypeFace);
         myDevice = (TextView) mContentView.findViewById(R.id.my_name);
         myDevice.setTypeface(AppGlobals.normalTypeFace);
         if (AppGlobals.USER_TYPE == 1) {
-            randomTextView = (RandomTextView) mContentView.findViewById(
-                    R.id.random_textview);
-            radarScanView = (RadarScanView) mContentView.findViewById(R.id.scan_view);
-
-            randomTextView.setOnRippleViewClickListener(
-                    new RandomTextView.OnRippleViewClickListener() {
-                        @Override
-                        public void onRippleViewClicked(WifiP2pDevice device) {
-                            ((DeviceActionListener) getActivity()).showDetails(device);
-                        }
-                    });
+            start();
         } else {
             rippleView = (RippleView) mContentView.findViewById(R.id.ripple);
             rippleView.setMode(RippleView.MODE_OUT);
@@ -104,6 +100,21 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
             rippleView.startRippleAnimation();
         }
         return mContentView;
+    }
+
+    public void start() {
+        randomTextView = null;
+        randomTextView = (RandomTextView) mContentView.findViewById(
+                R.id.random_textview);
+        radarScanView = (RadarScanView) mContentView.findViewById(R.id.scan_view);
+
+        randomTextView.setOnRippleViewClickListener(
+                new RandomTextView.OnRippleViewClickListener() {
+                    @Override
+                    public void onRippleViewClicked(WifiP2pDevice device) {
+                        ((DeviceActionListener) getActivity()).showDetails(device);
+                    }
+                });
     }
 
 
@@ -192,8 +203,20 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         this.device = device;
         String[] name = device.deviceName.split("_");
         myDevice.setText("My Device: "+name[0]);
-        state.setText(getDeviceStatus(device.status));
-        stateNotification(getDeviceStatus(device.status));
+        String currentState = getDeviceStatus(device.status);
+        AppGlobals.CURRENTSTATE = currentState;
+        state.setText(currentState);
+        stateNotification(currentState);
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (AppGlobals.CURRENTSTATE.equals("Connected")) {
+                    WifiActivity.stateMenu.setIcon(R.mipmap.wifi_on);
+                } else {
+                    WifiActivity.stateMenu.setIcon(R.mipmap.wifi_off);
+                }
+            }
+        }, 1500);
     }
 
     @Override
@@ -211,9 +234,10 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
                 randomTextView.show();
             }
             if (peers.size() == 0) {
-                randomTextView.removeAll();
-                radarScanView.stopRadar();
-                Log.d(getClass().getName(), "No devices found");
+                if (randomTextView != null) {
+                    randomTextView.removeAll();
+                    radarScanView.stopRadar();
+            }
                 return;
             }
         }

@@ -3,6 +3,7 @@ package com.byteshaft.healthvideo.fragments;
 import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -28,6 +29,10 @@ import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.utils.Helpers;
+import com.byteshaft.healthvideo.wifi.DeviceDetailFragment;
+import com.byteshaft.healthvideo.wifi.FileTransferService;
+import com.byteshaft.healthvideo.wifi.Utils;
+import com.byteshaft.healthvideo.wifi.WifiActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.byteshaft.healthvideo.wifi.DeviceDetailFragment.IP_SERVER;
+import static com.byteshaft.healthvideo.wifi.DeviceDetailFragment.PORT;
 
 /**
  * Created by s9iper1 on 6/17/17.
@@ -143,12 +150,13 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.download:
-                downloadingNow = new ArrayList<>();
+                ArrayList<DataFile> arrayList = new ArrayList<>();
                 for (Map.Entry<Integer,DataFile> entry : toBeDownload.entrySet()) {
                     Integer key = entry.getKey();
-                    downloadingNow.add(key);
+                    arrayList.add(entry.getValue());
                 }
                 if (checkAndRequestPermissions()) {
+                    sendFilesToRequest(arrayList);
                     
                 } else {
                     // send requested files
@@ -157,6 +165,27 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
             default:
                 return false;
         }
+    }
+
+    public void sendFilesToRequest(ArrayList<DataFile> arrayList) {
+        String localIP = Utils.getIPAddress(true);
+        // Trick to find the ip in the file /proc/net/arp
+        String clientMacFixed = new String(AppGlobals.clientIp).replace("99", "19");
+        String clientIP = Utils.getIPFromMac(clientMacFixed);
+        Log.d(WifiActivity.TAG, "sending ----------- files " + arrayList.size());
+        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+        serviceIntent.setAction(FileTransferService.ACTION_SEND_ARRAY);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, arrayList);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_TYPE, AppGlobals.DATA_TYPE_REQUESTED_ARRAY);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, AppGlobals.clientIp);
+//        if(localIP.equals(IP_SERVER)) {
+//            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
+//        }else{
+//            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
+//        }
+        serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
+        getActivity().startService(serviceIntent);
+
     }
 
     @Override

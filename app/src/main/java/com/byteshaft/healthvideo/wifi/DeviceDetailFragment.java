@@ -1,24 +1,9 @@
-/*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.byteshaft.healthvideo.wifi;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
@@ -29,8 +14,12 @@ import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.AppCompatButton;
+import android.text.Html;
 import android.util.Log;
+import android.util.StringBuilderPrinter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,6 +43,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.byteshaft.healthvideo.MainActivity.wifiP2pDevice;
@@ -71,6 +61,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	private static DeviceDetailFragment instance;
 	private AppCompatButton sendFilesButton;
 	private ArrayList<DataFile> dataFileArrayList;
+	private static boolean foreground = false;
 
 	public static DeviceDetailFragment getInstance() {
 		return instance;
@@ -84,6 +75,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		instance = this;
+		foreground = true;
 		mContentView = inflater.inflate(R.layout.device_detail, null);
 		sendFilesButton = (AppCompatButton) mContentView.findViewById(R.id.btn_send_files);
 		mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
@@ -120,6 +112,18 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 				}
 			});
 		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		foreground = true;
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		foreground = false;
 	}
 
 	@Override
@@ -185,42 +189,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
 	}
 
-    private void sendFilesToRequest(ArrayList<DataFile> arrayList) {
-        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
-        File[] filesArray = files.listFiles();
-        for (File file: filesArray) {
-            Log.i("TAG", file.getAbsolutePath());
-            String[] onlyFileName = file.getName().split("\\|");
-            DataFile dataFile = new DataFile();
-            dataFile.setUrl(file.getAbsolutePath());
-            dataFile.setId(Integer.parseInt(onlyFileName[0]));
-            String[] fileAndExt = onlyFileName[1].split("\\.");
-            Log.i("TAG", "name " + onlyFileName[1]);
-            Log.i("TAG", "only name " + fileAndExt[0]);
-            dataFile.setTitle(fileAndExt[0]);
-            dataFile.setExtension(fileAndExt[1]);
-            dataFile.setSize(convertToStringRepresentation(file.getAbsoluteFile().length()));
-            dataFileArrayList.add(dataFile);
-        }
-
-        String localIP = Utils.getIPAddress(true);
-        // Trick to find the ip in the file /proc/net/arp
-        String clientMacFixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
-        String clientIP = Utils.getIPFromMac(clientMacFixed);
-        Log.d(WifiActivity.TAG, "sending ----------- files " + arrayList);
-        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-        serviceIntent.setAction(FileTransferService.ACTION_SEND_ARRAY);
-        serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, arrayList);
-        if(localIP.equals(IP_SERVER)){
-            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
-        }else{
-            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
-        }
-        serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
-        getActivity().startService(serviceIntent);
-
-    }
-
 	@Override
 	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
 		if (progressDialog != null && progressDialog.isShowing()) {
@@ -267,6 +235,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 				ServerSocket serverSocket = new ServerSocket(PORT);
 				Log.d(WifiActivity.TAG, "Server: Socket opened");
 				Socket client = serverSocket.accept();
+				Logger.getLogger("Do in Background").info(client.getInetAddress().getHostAddress());
+				Logger.getLogger("Do in Background 2").info(client.getInetAddress().toString());
+				AppGlobals.clientIp = client.getInetAddress().getHostAddress();
 				getArrayFromStream(client);
 //				Log.d(WifiActivity.TAG, "Server: connection done");
 //				final File f = new File(Environment.getExternalStorageDirectory() + "/"
@@ -315,8 +286,52 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 						}
 						done = true;
 						break;
-					case 2: // Type B
-						System.out.println("Message B: " + dIn.readUTF());
+					case AppGlobals.DATA_TYPE_REQUESTED_ARRAY:
+						try {
+							ArrayList<DataFile> fileArrayList = (ArrayList<DataFile>) dIn.readObject();
+							final StringBuilder stringBuilder = new StringBuilder();
+							if (fileArrayList.size() > 0) {
+								AppGlobals.dataFileArrayList = fileArrayList;
+								for (DataFile dataFile : fileArrayList) {
+									stringBuilder.append(dataFile.getTitle());
+                                    stringBuilder.append(".");
+                                    stringBuilder.append(dataFile.getExtension());
+									stringBuilder.append("\n");
+								}
+								Log.i("TAG", "received " + fileArrayList.size());
+								getInstance().getActivity().runOnUiThread(new Runnable() {
+									@Override
+									public void run() {
+										Toast.makeText(context, "Request Received", Toast.LENGTH_SHORT).show();
+										if (foreground) {
+											AlertDialog alertDialog;
+											AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new android.view.ContextThemeWrapper(getInstance().getActivity(), R.style.myDialog));
+											alertDialogBuilder.setTitle("Files Request");
+											alertDialogBuilder.setIcon(R.mipmap.folder);
+											alertDialogBuilder.setMessage(stringBuilder.toString()).setCancelable(false)
+													.setPositiveButton("Send", new DialogInterface.OnClickListener() {
+														public void onClick(DialogInterface dialog, int id) {
+															dialog.dismiss();
+
+
+														}
+													});
+											alertDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+												@Override
+												public void onClick(DialogInterface dialogInterface, int i) {
+													dialogInterface.dismiss();
+												}
+											});
+
+											alertDialog = alertDialogBuilder.create();
+											alertDialog.show();
+										}
+									}
+								});
+							}
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						}
 						done = true;
 						break;
 					case 3: // Type C

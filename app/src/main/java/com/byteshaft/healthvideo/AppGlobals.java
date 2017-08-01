@@ -6,6 +6,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 
+import com.byteshaft.healthvideo.serializers.DataFile;
+
+import java.util.ArrayList;
+
 /**
  * Created by s9iper1 on 6/10/17.
  */
@@ -30,11 +34,15 @@ public class AppGlobals extends Application {
     private static NotificationManager notificationManager;
     public static String CURRENT_STATE = "Disconnected";
     public static final int DATA_TYPE_ARRAY = 0;
+    public static final int DATA_TYPE_REQUESTED_ARRAY = 1;
+    public static String clientIp = "";
+    public static ArrayList<DataFile> dataFileArrayList;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
+        dataFileArrayList = new ArrayList<>();
         sContext = getApplicationContext();
         boldTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/bold.ttf");
         normalTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/simple.ttf");

@@ -38,7 +38,9 @@ public class FileTransferService extends IntentService {
 	public static final String EXTRAS_DATA_FILES = "data_files";
 	public static final String EXTRAS_ADDRESS = "go_host";
 	public static final String EXTRAS_PORT = "go_port";
+    public static final String EXTRAS_DATA_TYPE = "data_type";
 	private Handler mMainThreadHandler = null;
+
 
 
 	public FileTransferService(String name) {
@@ -97,6 +99,8 @@ public class FileTransferService extends IntentService {
 		} else if (intent.getAction().equals(ACTION_SEND_ARRAY)) {
 			ArrayList<DataFile> fileUri = (ArrayList<DataFile>) intent.getExtras().getSerializable(EXTRAS_DATA_FILES);
 			String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            Log.d(getClass().getSimpleName(), "host   " + host);
+            int dataType = intent.getIntExtra(EXTRAS_DATA_TYPE, 0);
 			Socket socket = new Socket();
 			int port = intent.getExtras().getInt(EXTRAS_PORT);
 			try {
@@ -106,7 +110,7 @@ public class FileTransferService extends IntentService {
 
 				Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
 				ObjectOutputStream stream = new ObjectOutputStream(socket.getOutputStream());
-				stream.writeByte(AppGlobals.DATA_TYPE_ARRAY);
+				stream.writeByte(dataType);
 				stream.writeObject(fileUri);
 				Log.d(getClass().getSimpleName(), "Client: Data written");
 				mMainThreadHandler.post(new Runnable() {

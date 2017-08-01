@@ -100,6 +100,7 @@ public class RandomTextView extends FrameLayout implements ViewTreeObserver.OnGl
         }
         removeAllViews();
         deviceHashMap = new HashMap<>();
+        if (txt != null)
         txt.stopRippleAnimation();
     }
 

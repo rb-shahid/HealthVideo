@@ -41,7 +41,8 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.AccentColor"/>
         <activity android:name=".wifi.WifiActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme"/>
         <activity android:name=".accountfragments.ChangePassword"
             android:screenOrientation="portrait"/>
 

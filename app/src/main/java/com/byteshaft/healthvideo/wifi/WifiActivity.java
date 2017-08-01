@@ -77,6 +77,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public void onPause() {
         super.onPause();
         unregisterReceiver(receiver);
+        stopDiscovery();
     }
 
     /**
@@ -167,6 +168,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
             DeviceListFragment.rippleView.startRippleAnimation();
         }
     }
+
 
     public static void stopDiscovery() {
         new android.os.Handler().postDelayed(new Runnable() {

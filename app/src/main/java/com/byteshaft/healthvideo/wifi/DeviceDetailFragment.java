@@ -56,11 +56,6 @@ import java.util.HashMap;
 import static android.content.Context.MODE_PRIVATE;
 import static com.byteshaft.healthvideo.fragments.LocalFilesFragment.convertToStringRepresentation;
 
-/**
- * A fragment that manages a particular peer and allows interaction with device
- * i.e. setting up network connection and transferring data.
- */
-
 public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
 
 	public static final String IP_SERVER = "192.168.49.1";
@@ -89,15 +84,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 		instance = this;
 		mContentView = inflater.inflate(R.layout.device_detail, null);
 		sendFilesButton = (AppCompatButton) mContentView.findViewById(R.id.btn_send_files);
-		if (AppGlobals.isLogin() && AppGlobals.USER_TYPE == 1) {
-			sendFilesButton.setVisibility(View.VISIBLE);
-			sendFilesButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View view) {
-
-				}
-			});
-		}
 		mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -111,7 +97,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 				((DeviceListFragment.DeviceActionListener) getActivity()).connect(config);
 			}
 		});
-
 		mContentView.findViewById(R.id.btn_disconnect).setOnClickListener(
 				new View.OnClickListener() {
 
@@ -121,6 +106,18 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 					}
 				});
 		return mContentView;
+	}
+
+	public void showSendButtonToAidWorker() {
+		if (AppGlobals.isLogin() && AppGlobals.USER_TYPE == 1) {
+			sendFilesButton.setVisibility(View.VISIBLE);
+			sendFilesButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					sendLocalFilesToNurse();
+				}
+			});
+		}
 	}
 
 	@Override
@@ -235,22 +232,23 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 				ServerSocket serverSocket = new ServerSocket(PORT);
 				Log.d(WifiActivity.TAG, "Server: Socket opened");
 				Socket client = serverSocket.accept();
-				Log.d(WifiActivity.TAG, "Server: connection done");
-				final File f = new File(Environment.getExternalStorageDirectory() + "/"
-						+ context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-						+ ".jpg");
-
-				File dirs = new File(f.getParent());
-				if (!dirs.exists())
-					dirs.mkdirs();
-				f.createNewFile();
-
-				Log.d(WifiActivity.TAG, "server: copying files " + f.toString());
-				InputStream inputstream = client.getInputStream();
-				copyFile(inputstream, new FileOutputStream(f));
-				serverSocket.close();
+				getArrayFromStream(client);
+//				Log.d(WifiActivity.TAG, "Server: connection done");
+//				final File f = new File(Environment.getExternalStorageDirectory() + "/"
+//						+ context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
+//						+ ".jpg");
+//
+//				File dirs = new File(f.getParent());
+//				if (!dirs.exists())
+//					dirs.mkdirs();
+//				f.createNewFile();
+//
+//				Log.d(WifiActivity.TAG, "server: copying files " + f.toString());
+//				InputStream inputstream = client.getInputStream();
+//				copyFile(inputstream, new FileOutputStream(f));
+//				serverSocket.close();
 				server_running = false;
-				return f.getAbsolutePath();
+				return "";
 			} catch (IOException e) {
 				Log.e(WifiActivity.TAG, e.getMessage());
 				return null;

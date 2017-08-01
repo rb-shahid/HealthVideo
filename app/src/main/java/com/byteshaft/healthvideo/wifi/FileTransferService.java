@@ -7,6 +7,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Looper;
 import android.util.Log;
 
 import com.byteshaft.healthvideo.AppGlobals;
@@ -20,6 +21,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * A service that process each file transfer request i.e Intent by opening a
@@ -62,19 +64,19 @@ public class FileTransferService extends IntentService {
 				socket.bind(null);
 				socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
-				Log.d(WifiActivity.TAG, "Client socket - " + socket.isConnected());
+				Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
 				OutputStream stream = socket.getOutputStream();
 				ContentResolver cr = context.getContentResolver();
 				InputStream is = null;
 				try {
 					is = cr.openInputStream(Uri.parse(fileUri));
 				} catch (FileNotFoundException e) {
-					Log.d(WifiActivity.TAG, e.toString());
+					Log.d(getClass().getSimpleName(), e.toString());
 				}
 				DeviceDetailFragment.copyFile(is, stream);
-				Log.d(WifiActivity.TAG, "Client: Data written");
+				Log.d(getClass().getSimpleName(), "Client: Data written");
 			} catch (IOException e) {
-				Log.e(WifiActivity.TAG, e.getMessage());
+				Log.e(getClass().getSimpleName(), e.getMessage());
 			} finally {
 				if (socket != null) {
 					if (socket.isConnected()) {
@@ -95,17 +97,17 @@ public class FileTransferService extends IntentService {
 			int port = intent.getExtras().getInt(EXTRAS_PORT);
 
 			try {
-				Log.d(WifiActivity.TAG, "Opening client socket - ");
+				Log.d(getClass().getSimpleName(), "Opening client socket - ");
 				socket.bind(null);
 				socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
-				Log.d(WifiActivity.TAG, "Client socket - " + socket.isConnected());
+				Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
 				ObjectOutputStream stream = new ObjectOutputStream(socket.getOutputStream());
 				stream.writeByte(AppGlobals.DATA_TYPE_ARRAY);
 				stream.writeObject(fileUri);
-				Log.d(WifiActivity.TAG, "Client: Data written");
+				Log.d(getClass().getSimpleName(), "Client: Data written");
 			} catch (IOException e) {
-				Log.e(WifiActivity.TAG, e.getMessage());
+				Log.e(getClass().getSimpleName(), e.getMessage());
 			} finally {
 				if (socket != null) {
 					if (socket.isConnected()) {

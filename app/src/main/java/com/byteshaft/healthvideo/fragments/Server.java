@@ -62,10 +62,16 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
     private final int PERMISSION_REQUEST = 10;
     private int counter = 0;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private static Server instance;
+
+    public static Server getInstance() {
+        return instance;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
+        instance = this;
         mBaseView = inflater.inflate(R.layout.server, container, false);
         remoteFileArrayList = new ArrayList<>();
         toBeDownload = new HashMap<>();
@@ -84,13 +90,10 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
             }
         });
         mListView.setOnItemClickListener(this);
-
         File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         Log.i("TAG", "Remote file " + filesArray.length);
         alreadyExistFiles = new ArrayList<>();
-        remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
-        mListView.setAdapter(remoteFilesAdapter);
         for (File file: filesArray) {
             String[] onlyFileName = file.getName().split("\\|");
             alreadyExistFiles.add(onlyFileName[0]+onlyFileName[1]);
@@ -99,15 +102,12 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
         return mBaseView;
     }
 
-    public static void update() {
-        if (remoteFilesAdapter != null)
-            remoteFilesAdapter.notifyDataSetChanged();
-    }
-
     @Override
     public void onResume() {
         super.onResume();
         foreground = true;
+        remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
+        mListView.setAdapter(remoteFilesAdapter);
     }
 
     @Override

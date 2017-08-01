@@ -106,6 +106,9 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         randomTextView = null;
         randomTextView = (RandomTextView) mContentView.findViewById(
                 R.id.random_textview);
+        if (radarScanView != null) {
+            radarScanView.stopRadar();
+        }
         radarScanView = (RadarScanView) mContentView.findViewById(R.id.scan_view);
 
         randomTextView.setOnRippleViewClickListener(
@@ -211,6 +214,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
             @Override
             public void run() {
                 if (AppGlobals.CURRENT_STATE.equals("Connected")) {
+                    DeviceDetailFragment.getInstance().showSendButtonToAidWorker();
                     WifiActivity.stateMenu.setIcon(R.mipmap.wifi_on);
                 } else {
                     WifiActivity.stateMenu.setIcon(R.mipmap.wifi_off);

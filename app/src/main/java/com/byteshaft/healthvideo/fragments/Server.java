@@ -47,20 +47,17 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
     private ListView mListView;
     public static ArrayList<DataFile> remoteFileArrayList;
     private static RemoteFilesAdapter remoteFilesAdapter;
-    private HashMap<Integer, String[]> toBeDownload;
+    private HashMap<Integer, DataFile> toBeDownload;
     private static final String SPACE = " ";
     private static final String DOTS = "...";
-    private ArrayList<String> downloadAbleUrl;
+
     private File directory;
     public static ArrayList<String> alreadyExistFiles;
     private ArrayList<Integer> downloadingNow;
     private boolean foreground = false;
     private int id = 1001;
-    private NotificationManager mNotificationManager;
-    private NotificationCompat.Builder  mBuilder;
     private MenuItem saveMenuItem;
     private final int PERMISSION_REQUEST = 10;
-    private int counter = 0;
     private SwipeRefreshLayout swipeRefreshLayout;
     private static Server instance;
 
@@ -75,10 +72,7 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
         mBaseView = inflater.inflate(R.layout.server, container, false);
         remoteFileArrayList = new ArrayList<>();
         toBeDownload = new HashMap<>();
-        mNotificationManager =
-                (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
         directory = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
-        downloadAbleUrl = new ArrayList<>();
         mListView = (ListView) mBaseView.findViewById(R.id.remote_files_list);
         swipeRefreshLayout = (SwipeRefreshLayout) mBaseView.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -150,16 +144,12 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
         switch (item.getItemId()) {
             case R.id.download:
                 downloadingNow = new ArrayList<>();
-                for (Map.Entry<Integer,String[]> entry : toBeDownload.entrySet()) {
+                for (Map.Entry<Integer,DataFile> entry : toBeDownload.entrySet()) {
                     Integer key = entry.getKey();
                     downloadingNow.add(key);
                 }
-                if (ContextCompat.checkSelfPermission(getActivity(),
-                        Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(getActivity(),
-                        Manifest.permission.READ_PHONE_STATE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    checkAndRequestPermissions();
+                if (checkAndRequestPermissions()) {
+                    
                 } else {
                     // send requested files
                 }
@@ -177,8 +167,7 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
             Helpers.showSnackBar(getView(), getResources().getString(R.string.file_already_exist));
         }
         if (!toBeDownload.containsKey(dataFile.getId())) {
-            String strings[] = {dataFile.getUrl(), dataFile.getExtension(), dataFile.getTitle(), String.valueOf(dataFile.getId())};
-            toBeDownload.put(dataFile.getId(), strings);
+            toBeDownload.put(dataFile.getId(), dataFile);
         } else {
             toBeDownload.remove(dataFile.getId());
         }

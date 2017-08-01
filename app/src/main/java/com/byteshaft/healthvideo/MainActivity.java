@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.wifi.WifiManager;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity
             R.drawable.connection
     };
     public MenuItem backItem;
+    public static WifiP2pDevice wifiP2pDevice;
 
     public static MainActivity getInstance() {
         return instance;

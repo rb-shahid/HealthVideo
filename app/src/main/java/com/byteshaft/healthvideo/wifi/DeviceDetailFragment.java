@@ -37,6 +37,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
+import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
@@ -55,6 +56,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.byteshaft.healthvideo.MainActivity.wifiP2pDevice;
 import static com.byteshaft.healthvideo.fragments.LocalFilesFragment.convertToStringRepresentation;
 
 public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
@@ -64,7 +66,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	private static boolean server_running = false;
 
 	private View mContentView = null;
-	private WifiP2pDevice device;
 	private WifiP2pInfo info;
 	private ProgressDialog progressDialog = null;
 	private static DeviceDetailFragment instance;
@@ -90,10 +91,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 			@Override
 			public void onClick(View v) {
 				WifiP2pConfig config = new WifiP2pConfig();
-				if (device != null)
-				config.deviceAddress = device.deviceAddress;
-				Log.i("TAG", "device " + device.deviceAddress);
-				Log.i("TAG", "device status" + device.status);
+				if (wifiP2pDevice != null)
+				config.deviceAddress = wifiP2pDevice.deviceAddress;
+				Log.i("TAG", "device " + wifiP2pDevice.deviceAddress);
+				Log.i("TAG", "device status" + wifiP2pDevice.status);
 				config.wps.setup = WpsInfo.PBC;
 				((DeviceListFragment.DeviceActionListener) getActivity()).connect(config);
 			}
@@ -125,7 +126,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		String localIP = Utils.getIPAddress(true);
 		// Trick to find the ip in the file /proc/net/arp
-		String client_mac_fixed = new String(device.deviceAddress).replace("99", "19");
+		String client_mac_fixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
 		String clientIP = Utils.getIPFromMac(client_mac_fixed);
 		// User has picked an image. Transfer it to group owner i.e peer using
 		// FileTransferService.
@@ -168,12 +169,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
 		String localIP = Utils.getIPAddress(true);
 		// Trick to find the ip in the file /proc/net/arp
-		String client_mac_fixed = new String(device.deviceAddress).replace("99", "19");
-		String clientIP = Utils.getIPFromMac(client_mac_fixed);
-		// User has picked an image. Transfer it to group owner i.e peer using
-		// FileTransferService.
-//		TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
-//		statusText.setText("Sending: " + uri);
+		String clientMacFixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
+		String clientIP = Utils.getIPFromMac(clientMacFixed);
 		Log.d(WifiActivity.TAG, "sending ----------- files " + dataFileArrayList.size());
 		Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
 		serviceIntent.setAction(FileTransferService.ACTION_SEND_ARRAY);
@@ -188,11 +185,49 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
 	}
 
+    private void sendFilesToRequest(ArrayList<DataFile> arrayList) {
+        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        File[] filesArray = files.listFiles();
+        for (File file: filesArray) {
+            Log.i("TAG", file.getAbsolutePath());
+            String[] onlyFileName = file.getName().split("\\|");
+            DataFile dataFile = new DataFile();
+            dataFile.setUrl(file.getAbsolutePath());
+            dataFile.setId(Integer.parseInt(onlyFileName[0]));
+            String[] fileAndExt = onlyFileName[1].split("\\.");
+            Log.i("TAG", "name " + onlyFileName[1]);
+            Log.i("TAG", "only name " + fileAndExt[0]);
+            dataFile.setTitle(fileAndExt[0]);
+            dataFile.setExtension(fileAndExt[1]);
+            dataFile.setSize(convertToStringRepresentation(file.getAbsoluteFile().length()));
+            dataFileArrayList.add(dataFile);
+        }
+
+        String localIP = Utils.getIPAddress(true);
+        // Trick to find the ip in the file /proc/net/arp
+        String clientMacFixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
+        String clientIP = Utils.getIPFromMac(clientMacFixed);
+        Log.d(WifiActivity.TAG, "sending ----------- files " + arrayList);
+        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+        serviceIntent.setAction(FileTransferService.ACTION_SEND_ARRAY);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, arrayList);
+        if(localIP.equals(IP_SERVER)){
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
+        }else{
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
+        }
+        serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
+        getActivity().startService(serviceIntent);
+
+    }
+
 	@Override
 	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
 		if (progressDialog != null && progressDialog.isShowing()) {
 			progressDialog.dismiss();
 		}
+		Log.i(getClass().getSimpleName(), "owner " + info.groupOwnerAddress);
+        Log.i(getClass().getSimpleName(), "owner " + info.isGroupOwner);
 		this.info = info;
 		this.getView().setVisibility(View.VISIBLE);
 		if (!server_running){
@@ -209,7 +244,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	 * @param device the device to be displayed
 	 */
 	public void showDetails(WifiP2pDevice device) {
-		this.device = device;
+		wifiP2pDevice = device;
 		this.getView().setVisibility(View.VISIBLE);
 	}
 
@@ -217,7 +252,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 		mContentView.findViewById(R.id.btn_connect).setVisibility(View.VISIBLE);
 		this.getView().setVisibility(View.GONE);
 	}
-
 
 	public static class ServerAsyncTask extends AsyncTask<Void, Void, String> {
 

@@ -60,6 +60,8 @@
             </intent-filter>
         </activity>
 
+        <service android:name=".wifi.FileTransferService" android:enabled="true"/>
+
     </application>
 
 </manifest>

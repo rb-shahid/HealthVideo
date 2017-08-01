@@ -28,7 +28,9 @@ public class AppGlobals extends Application {
     public static Typeface moreBold;
     public static final int NOTIFICATION_ID = 100011;
     private static NotificationManager notificationManager;
-    public static String CURRENTSTATE = "Disconnected";
+    public static String CURRENT_STATE = "Disconnected";
+    public static final int DATA_TYPE_ARRAY = 0;
+
 
     @Override
     public void onCreate() {

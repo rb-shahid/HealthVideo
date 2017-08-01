@@ -28,6 +28,14 @@
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:text="@string/disconnect_peer_button" />
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/btn_send_files"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:visibility="invisible"
+                android:text="@string/send_files" />
         </LinearLayout>
         <!--<TextView-->
             <!--android:id="@+id/device_address"-->

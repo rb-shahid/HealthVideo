@@ -1,10 +1,12 @@
 package com.byteshaft.healthvideo.serializers;
 
+import java.io.Serializable;
+
 /**
  * Created by s9iper1 on 6/16/17.
  */
 
-public class DataFile {
+public class DataFile implements Serializable{
 
     private int id;
     private String title;

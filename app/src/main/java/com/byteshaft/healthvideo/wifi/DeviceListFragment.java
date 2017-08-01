@@ -204,13 +204,13 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         String[] name = device.deviceName.split("_");
         myDevice.setText("My Device: "+name[0]);
         String currentState = getDeviceStatus(device.status);
-        AppGlobals.CURRENTSTATE = currentState;
+        AppGlobals.CURRENT_STATE = currentState;
         state.setText(currentState);
         stateNotification(currentState);
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (AppGlobals.CURRENTSTATE.equals("Connected")) {
+                if (AppGlobals.CURRENT_STATE.equals("Connected")) {
                     WifiActivity.stateMenu.setIcon(R.mipmap.wifi_on);
                 } else {
                     WifiActivity.stateMenu.setIcon(R.mipmap.wifi_off);

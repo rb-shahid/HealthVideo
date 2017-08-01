@@ -75,5 +75,6 @@
     <string name="network_unreachable">Network unreachable</string>
     <string name="connecting">Connecting...</string>
     <string name="failed">Failed, please try again</string>
+    <string name="send_files">send video</string>
 
 </resources>

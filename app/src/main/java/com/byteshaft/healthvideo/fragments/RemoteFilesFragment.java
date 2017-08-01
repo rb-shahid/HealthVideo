@@ -92,13 +92,13 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
+        mBaseView = inflater.inflate(R.layout.remote_files_fragment, container, false);
         remoteFileArrayList = new ArrayList<>();
         toBeDownload = new HashMap<>();
         mNotificationManager =
                 (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
         directory = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         downloadAbleUrl = new ArrayList<>();
-        mBaseView = inflater.inflate(R.layout.remote_files_fragment, container, false);
         mListView = (ListView) mBaseView.findViewById(R.id.remote_files_list);
         swipeRefreshLayout = (SwipeRefreshLayout) mBaseView.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {

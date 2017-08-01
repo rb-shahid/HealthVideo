@@ -172,7 +172,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (AppGlobals.CURRENTSTATE.equals("Connected")) {
+                if (!AppGlobals.CURRENT_STATE.equals("Connected")) {
                     if (manager != null && channel != null) {
                         manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
                             @Override

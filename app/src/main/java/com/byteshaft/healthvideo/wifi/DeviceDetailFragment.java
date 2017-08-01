@@ -29,20 +29,32 @@ import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v7.widget.AppCompatButton;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
+import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
+import com.byteshaft.healthvideo.fragments.Server;
+import com.byteshaft.healthvideo.serializers.DataFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import static android.content.Context.MODE_PRIVATE;
+import static com.byteshaft.healthvideo.fragments.LocalFilesFragment.convertToStringRepresentation;
 
 /**
  * A fragment that manages a particular peer and allows interaction with device
@@ -60,6 +72,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	private WifiP2pInfo info;
 	private ProgressDialog progressDialog = null;
 	private static DeviceDetailFragment instance;
+	private AppCompatButton sendFilesButton;
+	private ArrayList<DataFile> dataFileArrayList;
 
 	public static DeviceDetailFragment getInstance() {
 		return instance;
@@ -74,6 +88,16 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		instance = this;
 		mContentView = inflater.inflate(R.layout.device_detail, null);
+		sendFilesButton = (AppCompatButton) mContentView.findViewById(R.id.btn_send_files);
+		if (AppGlobals.isLogin() && AppGlobals.USER_TYPE == 1) {
+			sendFilesButton.setVisibility(View.VISIBLE);
+			sendFilesButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View view) {
+
+				}
+			});
+		}
 		mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -123,6 +147,47 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 		}
 		serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
 		getActivity().startService(serviceIntent);
+	}
+
+	private void sendLocalFilesToNurse() {
+		dataFileArrayList = new ArrayList<>();
+		File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+		File[] filesArray = files.listFiles();
+		for (File file: filesArray) {
+			Log.i("TAG", file.getAbsolutePath());
+			String[] onlyFileName = file.getName().split("\\|");
+			DataFile dataFile = new DataFile();
+			dataFile.setUrl(file.getAbsolutePath());
+			dataFile.setId(Integer.parseInt(onlyFileName[0]));
+			String[] fileAndExt = onlyFileName[1].split("\\.");
+			Log.i("TAG", "name " + onlyFileName[1]);
+			Log.i("TAG", "only name " + fileAndExt[0]);
+			dataFile.setTitle(fileAndExt[0]);
+			dataFile.setExtension(fileAndExt[1]);
+			dataFile.setSize(convertToStringRepresentation(file.getAbsoluteFile().length()));
+			dataFileArrayList.add(dataFile);
+		}
+
+		String localIP = Utils.getIPAddress(true);
+		// Trick to find the ip in the file /proc/net/arp
+		String client_mac_fixed = new String(device.deviceAddress).replace("99", "19");
+		String clientIP = Utils.getIPFromMac(client_mac_fixed);
+		// User has picked an image. Transfer it to group owner i.e peer using
+		// FileTransferService.
+//		TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
+//		statusText.setText("Sending: " + uri);
+		Log.d(WifiActivity.TAG, "sending ----------- files " + dataFileArrayList.size());
+		Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+		serviceIntent.setAction(FileTransferService.ACTION_SEND_ARRAY);
+		serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, dataFileArrayList);
+		if(localIP.equals(IP_SERVER)){
+			serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
+		}else{
+			serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
+		}
+		serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
+		getActivity().startService(serviceIntent);
+
 	}
 
 	@Override
@@ -190,6 +255,42 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 				Log.e(WifiActivity.TAG, e.getMessage());
 				return null;
 			}
+		}
+
+		private void getArrayFromStream(Socket socket) throws IOException {
+			ObjectInputStream dIn = new ObjectInputStream(socket.getInputStream());
+			boolean done = false;
+			while(!done) {
+				byte messageType = dIn.readByte();
+
+				switch(messageType) {
+					case AppGlobals.DATA_TYPE_ARRAY:
+						try {
+							ArrayList<DataFile> fileArrayList = (ArrayList<DataFile>) dIn.readObject();
+							if (fileArrayList.size() > 0) {
+								Server.remoteFileArrayList = fileArrayList;
+								Log.i("TAG", "received " + fileArrayList.size());
+							}
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						}
+						done = true;
+						break;
+					case 2: // Type B
+						System.out.println("Message B: " + dIn.readUTF());
+						done = true;
+						break;
+					case 3: // Type C
+						System.out.println("Message C [1]: " + dIn.readUTF());
+						System.out.println("Message C [2]: " + dIn.readUTF());
+						done = true;
+						break;
+					default:
+						done = true;
+				}
+			}
+
+			dIn.close();
 		}
 
 		@Override

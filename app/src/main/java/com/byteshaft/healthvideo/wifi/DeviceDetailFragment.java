@@ -1,10 +1,14 @@
 package com.byteshaft.healthvideo.wifi;
 
 import android.app.Fragment;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -14,7 +18,9 @@ import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.AppCompatButton;
 import android.text.Html;
@@ -325,7 +331,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
 											alertDialog = alertDialogBuilder.create();
 											alertDialog.show();
-										}
+										} else {
+                                            fileRequestNotification(stringBuilder.toString());
+                                        }
 									}
 								});
 							}
@@ -379,4 +387,41 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 		return true;
 	}
 
+    public static void fileRequestNotification(String filesName) {
+        Intent resultIntent =
+                new Intent(AppGlobals.getContext(), WifiActivity.class);
+        resultIntent.putExtra("send_file", true);
+
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        AppGlobals.getContext(),
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        int drawable = R.mipmap.folder;
+
+        NotificationCompat.Action replyAction =
+                new NotificationCompat.Action.Builder(
+                        android.R.drawable.ic_menu_send,
+                        "Send", resultPendingIntent)
+                        .build();
+
+        Notification newMessageNotification =
+                new NotificationCompat.Builder(AppGlobals.getContext())
+                        .setColor(ContextCompat.getColor(AppGlobals.getContext(), android.R.color.white))
+                        .setLargeIcon(BitmapFactory.decodeResource(AppGlobals.getContext().getResources(), drawable))
+                        .setSmallIcon(drawable)
+                        .setContentTitle("Files Request")
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(filesName))
+                        .addAction(replyAction).build();
+        NotificationManager notificationManager =
+                (NotificationManager)
+                        AppGlobals.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.notify(AppGlobals.FILE_NOTIFICATION_ID,
+                newMessageNotification);
+    }
 }

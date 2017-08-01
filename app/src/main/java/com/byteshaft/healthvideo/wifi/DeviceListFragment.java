@@ -163,7 +163,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 
     public void stateNotification(String state) {
         Intent resultIntent =
-                new Intent(getActivity(), MainActivity.class);
+                new Intent(AppGlobals.getContext(), WifiActivity.class);
 
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
@@ -187,7 +187,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         Notification newMessageNotification =
                 new NotificationCompat.Builder(AppGlobals.getContext())
                         .setColor(ContextCompat.getColor(AppGlobals.getContext(), android.R.color.white))
-                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), drawable))
+                        .setLargeIcon(BitmapFactory.decodeResource(AppGlobals.getContext().getResources(), drawable))
                         .setSmallIcon(drawable)
                         .setContentTitle("Connection State")
                         .setContentText(state)

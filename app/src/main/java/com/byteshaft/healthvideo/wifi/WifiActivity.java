@@ -56,6 +56,12 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
         instance = this;
         // add necessary intent values to be matched.
 
+        if (getIntent().getExtras() != null) {
+            if (getIntent().getExtras().getBoolean("send_file")) {
+                Log.e(getClass().getSimpleName(), "send files");
+            }
+        }
+
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -176,6 +182,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
             public void run() {
                 if (!AppGlobals.CURRENT_STATE.equals("Connected")) {
                     if (manager != null && channel != null) {
+                        getInstance().disconnect();
                         manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
                             @Override
                             public void onSuccess() {

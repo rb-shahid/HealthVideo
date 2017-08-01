@@ -121,6 +121,12 @@ public class FileTransferService extends IntentService {
 				});
 			} catch (IOException e) {
 				Log.e(getClass().getSimpleName(), e.getMessage());
+                mMainThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(AppGlobals.getContext(), "Try turning wifi off and on again", Toast.LENGTH_SHORT).show();
+                    }
+                });
 			} finally {
 				if (socket != null) {
 					if (socket.isConnected()) {

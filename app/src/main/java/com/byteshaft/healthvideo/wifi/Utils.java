@@ -4,8 +4,10 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -130,5 +132,22 @@ public class Utils {
 		} else {
 			return "Unknown";
 		}
+	}
+
+	public static byte[] getInputStreamByteArray(InputStream input) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len;
+
+		try {
+			while ((len = input.read(buffer)) > -1) {
+				baos.write(buffer, 0, len);
+			}
+			baos.flush();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+
+		return (baos.toByteArray());
 	}
 }

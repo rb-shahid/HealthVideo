@@ -24,8 +24,15 @@ import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.uihelpers.VideoPlayerActivity;
+import com.byteshaft.healthvideo.utils.Helpers;
+import com.byteshaft.requests.FormData;
+import com.byteshaft.requests.HttpRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +52,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     private ArrayList<DataFile> dataFileArrayList;
     private ListView mListView;
     private LocalFileFilesAdapter localFileFilesAdapter;
-    private HashMap<Integer, String[]> toBeDelete;
+    private HashMap<Integer, DataFile> toBeDelete;
     private static final long K = 1024;
     private static final long M = K * K;
     private static final long G = M * K;
@@ -78,10 +85,14 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         for (File file: filesArray) {
             Log.i("TAG", file.getAbsolutePath());
             String[] onlyFileName = file.getName().split("\\|");
+            Log.i("TAG", onlyFileName[0]);
+            Log.i("TAG", onlyFileName[1]);
+            Log.i("TAG", onlyFileName[2]);
             DataFile dataFile = new DataFile();
             dataFile.setUrl(file.getAbsolutePath());
-            dataFile.setId(Integer.parseInt(onlyFileName[0]));
-            String[] fileAndExt = onlyFileName[1].split("\\.");
+            dataFile.setId(Integer.parseInt(onlyFileName[1]));
+            dataFile.setUuid(onlyFileName[0]);
+            String[] fileAndExt = onlyFileName[2].split("\\.");
             Log.i("TAG", "name " + onlyFileName[1]);
             Log.i("TAG", "only name " + fileAndExt[0]);
             dataFile.setTitle(fileAndExt[0]);
@@ -130,23 +141,64 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         switch (item.getItemId()) {
             case R.id.delete:
                 ArrayList<Integer> delete = new ArrayList<>();
-                for (Map.Entry<Integer,String[]> entry : toBeDelete.entrySet()) {
+                int count = 0;
+                ArrayList<String> deleted = new ArrayList<>();
+                for (Map.Entry<Integer, DataFile> entry : toBeDelete.entrySet()) {
                     Integer key = entry.getKey();
-                    String[] value = entry.getValue();
-                    File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
-                    File file = new File(files.getAbsoluteFile() + "/" + key+"|"+value[0] +"."+ value[1]);
-                    Log.i("TAG", "to be delete"+ file.getAbsolutePath());
-                    if (file.delete())
-                        Log.i("TAG", String.valueOf(Integer.parseInt(value[2])));
-                    delete.add(Integer.parseInt(value[2]));
-                    Log.i("TAG", "Name "+key+" " + value[0]+" "+value[1]);
-                    alreadyExistFiles.remove(value[3]+value[0]+"."+value[1]);
+                    DataFile file = entry.getValue();
+                    File toBeDelete = new File(file.getUrl());
+                    deleted.add(file.getUuid());
+                    String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
+                            String.valueOf(file.getId())};
+                    if (toBeDelete.delete())
+                        Log.i("TAG", String.valueOf(Integer.parseInt(strings[2])));
+                    delete.add(Integer.parseInt(strings[2]));
+                    Log.i("TAG", "Name "+key+" " + strings[0]+" "+strings[1]);
+                    alreadyExistFiles.remove(strings[3]+strings[0]+"."+strings[1]);
                 }
+                Log.i("TAG", deleted.toString().replace("[", "").replace("]", ""));
                 readFiles();
                 toBeDelete = new HashMap<>();
+                sendDeletedFileUpdate(deleted.toString().replace("[", "").replace("]", ""));
                 return true;
             default: return false;
         }
+    }
+
+    private void sendDeletedFileUpdate(String files) {
+        HttpRequest request = new HttpRequest(getActivity());
+        request.setOnReadyStateChangeListener(new HttpRequest.OnReadyStateChangeListener() {
+            @Override
+            public void onReadyStateChange(HttpRequest request, int readyState) {
+                switch (readyState) {
+                    case HttpRequest.STATE_DONE:
+                        switch (request.getStatus()) {
+                            case HttpURLConnection.HTTP_OK:
+                                System.out.println(request.getResponseText());
+                                break;
+                            case HttpURLConnection.HTTP_BAD_REQUEST:
+                                System.out.println(request.getResponseText());
+                                break;
+                        }
+                }
+            }
+        });
+        request.setOnErrorListener(new HttpRequest.OnErrorListener() {
+            @Override
+            public void onError(HttpRequest request, int readyState, short error, Exception exception) {
+
+            }
+        });
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("fileid", files);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        request.open("DELETE", String.format("%suser_delete_file", AppGlobals.BASE_URL));
+        request.setRequestHeader("authorization",
+                AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
+        request.send(jsonObject.toString());
     }
 
     @Override
@@ -154,8 +206,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         DataFile dataFile = dataFileArrayList.get(i);
         String fullFileName = dataFile.getTitle()+"."+dataFile.getExtension();
         if (!toBeDelete.containsKey(dataFile.getId())) {
-            String strings[] = {dataFile.getTitle(), dataFile.getExtension(), String.valueOf(i), String.valueOf(dataFile.getId())};
-            toBeDelete.put(dataFile.getId(), strings);
+            toBeDelete.put(dataFile.getId(), dataFile);
         } else {
             toBeDelete.remove(dataFile.getId());
         }
@@ -223,19 +274,6 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
                             .getColor(android.R.color.black));
                     viewHolder.relativeLayout.setBackgroundColor(getResources().getColor(android.R.color.white));
             }
-//            viewHolder.openButton.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    DataFile dataFile = arrayList.get(position);
-//                    if (dataFile.getExtension().equals("3gp") || dataFile.getExtension().equals("mp4") ||
-//                            dataFile.getExtension().equals("mkv") || dataFile.getExtension().equals("mov")) {
-//                        Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
-//                        intent.putExtra("path", dataFile.getUrl());
-//                        startActivity(intent);
-//                    }
-//                }
-//            });
-
             return convertView;
         }
 

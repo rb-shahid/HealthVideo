@@ -15,6 +15,11 @@ import android.widget.Toast;
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.serializers.DataFile;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +29,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Logger;
+
+import static com.byteshaft.healthvideo.MainActivity.serverThread;
 
 /**
  * A service that process each file transfer request i.e Intent by opening a
@@ -37,6 +44,7 @@ public class FileTransferService extends IntentService {
 	public static final String EXTRAS_FILE_PATH = "file_url";
 	public static final String EXTRAS_DATA_FILES = "data_files";
 	public static final String EXTRAS_ADDRESS = "go_host";
+	public static final String EXTRAS_UTF = "utf_data";
 	public static final String EXTRAS_PORT = "go_port";
     public static final String EXTRAS_DATA_TYPE = "data_type";
 	private Handler mMainThreadHandler = null;
@@ -60,8 +68,9 @@ public class FileTransferService extends IntentService {
 		mMainThreadHandler = new Handler(getMainLooper());
 		Context context = getApplicationContext();
 		if (intent.getAction().equals(ACTION_SEND_FILE)) {
-			String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
+			Uri fileUri = Uri.parse(intent.getExtras().getString(EXTRAS_FILE_PATH));
 			String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+			String utfData = intent.getExtras().getString(EXTRAS_UTF);
 			Socket socket = new Socket();
 			int port = intent.getExtras().getInt(EXTRAS_PORT);
 
@@ -72,15 +81,36 @@ public class FileTransferService extends IntentService {
 
 				Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
 				OutputStream stream = socket.getOutputStream();
-				ContentResolver cr = context.getContentResolver();
-				InputStream is = null;
-				try {
-					is = cr.openInputStream(Uri.parse(fileUri));
-				} catch (FileNotFoundException e) {
-					Log.d(getClass().getSimpleName(), e.toString());
-				}
-				DeviceDetailFragment.copyFile(is, stream);
-				Log.d(getClass().getSimpleName(), "Client: Data written");
+                DataOutputStream dos = new DataOutputStream(stream);
+                dos.writeUTF(utfData);
+//
+//                ContentResolver cr = context.getContentResolver();
+//                InputStream is = null;
+//                try {
+//                    is = cr.openInputStream(fileUri);
+//                } catch (FileNotFoundException e) {
+//                    Log.d(getClass().getSimpleName(), e.toString());
+//                }
+
+                File myFile = new File(fileUri.getPath());
+                FileInputStream fileInputStream = new FileInputStream(myFile);
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+                DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
+                Log.d(getClass().getSimpleName(), "Client " + myFile.isFile());
+                Log.d(getClass().getSimpleName(), "Client: Data written " + myFile.getAbsoluteFile().length());
+                dos.writeLong(myFile.length());
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                int uploaded = 0;
+                while ((bytesRead = dataInputStream.read(buffer)) != -1) {
+                    dos.write(buffer, 0, bytesRead);
+                    uploaded += bytesRead;
+                    int progress = (int)
+                            ((float) uploaded / myFile.length() * 100);
+//                    Log.i("TAG", "progress" + progress);
+                    dos.flush();
+                }
+//				DeviceDetailFragment.copyFile(is, stream);
 			} catch (IOException e) {
 				Log.e(getClass().getSimpleName(), e.getMessage());
 			} finally {

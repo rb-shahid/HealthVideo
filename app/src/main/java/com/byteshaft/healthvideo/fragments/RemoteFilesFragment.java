@@ -114,14 +114,14 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         getRemoteFiles();
         File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
-        Log.i("TAG", "Remote file " + filesArray.length);
         alreadyExistFiles = new ArrayList<>();
         remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
         mListView.setAdapter(remoteFilesAdapter);
         for (File file: filesArray) {
+            Log.i("TAG", "file " + file);
             String[] onlyFileName = file.getName().split("\\|");
-            alreadyExistFiles.add(onlyFileName[0]+onlyFileName[1]);
-            Log.i("TAG", "Remote file " + onlyFileName[0]+onlyFileName[1]);
+            alreadyExistFiles.add(onlyFileName[1]+onlyFileName[2]);
+//            Log.i("TAG", "Remote file " + onlyFileName[0]+onlyFileName[1]);
         }
         return mBaseView;
     }
@@ -280,7 +280,8 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             Helpers.showSnackBar(getView(), getResources().getString(R.string.file_already_exist));
         }
         if (!toBeDownload.containsKey(dataFile.getId())) {
-            String strings[] = {dataFile.getUrl(), dataFile.getExtension(), dataFile.getTitle(), String.valueOf(dataFile.getId())};
+            String strings[] = {dataFile.getUrl(), dataFile.getExtension(), dataFile.getTitle(),
+                    String.valueOf(dataFile.getId()), String.valueOf(dataFile.getUuid())};
             toBeDownload.put(dataFile.getId(), strings);
         } else {
             toBeDownload.remove(dataFile.getId());
@@ -387,11 +388,9 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                     return "Server returned HTTP " + connection.getResponseCode()
                             + " " + connection.getResponseMessage();
                 }
-
                 int fileLength = connection.getContentLength();
-
                 input = connection.getInputStream();
-                output = new FileOutputStream(directory+"/"+downloadingNow.get(counter)+"|"+sUrl[2]+"."+sUrl[1]);
+                output = new FileOutputStream(directory+"/"+sUrl[4] +"|"+downloadingNow.get(counter)+"|"+sUrl[2]+"."+sUrl[1]);
                 byte data[] = new byte[4096];
                 long total = 0;
                 int count;
@@ -442,20 +441,6 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 remoteFilesAdapter.notifyDataSetChanged();
             }
             getLocation(file[1]);
-            counter++;
-            if (counter < downloadingNow.size()) {
-                new android.os.Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        String[] strings = toBeDownload.get(downloadingNow.get(counter));
-                        new DownloadTask().execute(strings);
-                        mBuilder.setContentText("Downloading: "+capitalizeLetter(strings[2]));
-                    }
-                }, 2000);
-            } else {
-                toBeDownload = new HashMap<>();
-                mNotificationManager.cancel(id);
-            }
         }
     }
 
@@ -472,6 +457,20 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                         switch (request.getStatus()) {
                             case HttpURLConnection.HTTP_OK:
                                 Log.i("TAG", request.getResponseText());
+                                counter++;
+                                if (counter < downloadingNow.size()) {
+                                    new android.os.Handler().postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            String[] strings = toBeDownload.get(downloadingNow.get(counter));
+                                            new DownloadTask().execute(strings);
+                                            mBuilder.setContentText("Downloading: "+capitalizeLetter(strings[2]));
+                                        }
+                                    }, 2000);
+                                } else {
+                                    toBeDownload = new HashMap<>();
+                                    mNotificationManager.cancel(id);
+                                }
                                 break;
                             case HttpURLConnection.HTTP_BAD_REQUEST:
                                 Log.i("TAG", request.getResponseText());

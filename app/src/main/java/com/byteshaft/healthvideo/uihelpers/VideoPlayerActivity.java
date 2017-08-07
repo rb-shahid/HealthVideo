@@ -46,7 +46,6 @@ public class VideoPlayerActivity extends Activity {
     }
 
     private void initializePlayer() {
-
         SimpleExoPlayerView simpleExoPlayerView = (SimpleExoPlayerView) findViewById(R.id.player_view);
         simpleExoPlayerView.requestFocus();
 

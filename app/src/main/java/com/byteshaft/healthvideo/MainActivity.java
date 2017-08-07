@@ -42,12 +42,14 @@ public class MainActivity extends AppCompatActivity
     private ViewPager mViewPager;
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private static MainActivity instance;
+    public static Thread serverThread;
     private int[] icons = {
             R.drawable.user,
             R.drawable.connection
     };
     public MenuItem backItem;
     public static WifiP2pDevice wifiP2pDevice;
+    public static boolean sThreadRunning = true;
 
     public static MainActivity getInstance() {
         return instance;

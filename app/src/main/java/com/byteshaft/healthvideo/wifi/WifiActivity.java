@@ -322,11 +322,12 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public void sendRequestedFiles() {
         DataFile dataFile = AppGlobals.requestedFileArrayList.get(AppGlobals.senderCounter);
         Log.i(getClass().getSimpleName(), dataFile.getUrl());
-        sendFile(dataFile.getUrl());
+        sendFile(dataFile.getUrl(), dataFile.getUuid()+"|"+ dataFile.getId() +"|" +
+                dataFile.getTitle() +"."+ dataFile.getExtension());
 
     }
 
-    public void sendFile(String filePath) {
+    public void sendFile(String filePath, String utf) {
         String localIP = Utils.getIPAddress(true);
         // Trick to find the ip in the file /proc/net/arp
         String client_mac_fixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
@@ -339,7 +340,8 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
         Log.d(WifiActivity.TAG, "Intent----------- " + uri);
         Intent serviceIntent = new Intent(AppGlobals.getContext(), FileTransferService.class);
         serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH,"file://" +uri.toString());
+        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+        serviceIntent.putExtra(FileTransferService.EXTRAS_UTF, utf);
         Log.i("TAG","local ip"+  String.valueOf(localIP == null));
         Log.i("TAG","Server ip" +String.valueOf(IP_SERVER == null));
         if(localIP.equals(IP_SERVER)){

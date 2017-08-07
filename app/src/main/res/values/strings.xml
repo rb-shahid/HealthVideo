@@ -75,7 +75,8 @@
     <string name="network_unreachable">Network unreachable</string>
     <string name="connecting">Connecting...</string>
     <string name="failed">Failed, please try again</string>
-    <string name="send_files">send videos</string>
+    <string name="send_array">send videos</string>
+    <string name="send_files">send Files</string>
     <string name="try_turning_wifi_off_on">Error occurred try turning wifi on and off</string>
     <string name="received">Received</string>
     <string name="request_received">Request Received</string>

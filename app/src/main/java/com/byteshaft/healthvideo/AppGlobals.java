@@ -36,6 +36,7 @@ public class AppGlobals extends Application {
     public static String CURRENT_STATE = "Disconnected";
     public static final int DATA_TYPE_ARRAY = 0;
     public static final int DATA_TYPE_REQUESTED_ARRAY = 1;
+    public static final int DATA_TYPE_FILES = 2;
     public static String clientIp = "";
     public static ArrayList<DataFile> requestedFileArrayList;
     public static int senderCounter = 0;

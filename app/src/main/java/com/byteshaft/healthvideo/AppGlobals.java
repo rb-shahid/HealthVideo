@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.support.v4.app.NotificationCompat;
 
 import com.byteshaft.healthvideo.serializers.DataFile;
 
@@ -40,6 +41,7 @@ public class AppGlobals extends Application {
     public static String clientIp = "";
     public static ArrayList<DataFile> requestedFileArrayList;
     public static int senderCounter = 0;
+    private static NotificationCompat.Builder builder;
 
 
     @Override
@@ -47,10 +49,15 @@ public class AppGlobals extends Application {
         super.onCreate();
         requestedFileArrayList = new ArrayList<>();
         sContext = getApplicationContext();
+        builder = new NotificationCompat.Builder(AppGlobals.getContext());
         boldTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/bold.ttf");
         normalTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/simple.ttf");
         moreBold = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/more_bold.ttf");
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    }
+
+    public static NotificationCompat.Builder getBuilder() {
+        return builder;
     }
 
     public static NotificationManager getNotificationManager() {
@@ -88,5 +95,21 @@ public class AppGlobals extends Application {
     public static void clearSettings() {
         SharedPreferences sharedPreferences = getPreferenceManager();
         sharedPreferences.edit().clear().commit();
+    }
+
+    public static void showFileProgress(String currentTask, String fileName, int id) {
+        NotificationCompat.Builder mBuilder = AppGlobals.getBuilder();
+        mBuilder.setContentInfo(currentTask+"...")
+                .setContentText(fileName)
+                .setAutoCancel(false)
+                .setSmallIcon(id);
+        mBuilder.setProgress(100, 0, false);
+        AppGlobals.getNotificationManager().notify(AppGlobals.FILE_NOTIFICATION_ID, mBuilder.build());
+    }
+
+    public static void updateFileProgress(int progress) {
+        AppGlobals.getBuilder().setProgress(100, progress, false);
+        AppGlobals.getNotificationManager().notify(AppGlobals.FILE_NOTIFICATION_ID,
+                AppGlobals.getBuilder().build());
     }
 }

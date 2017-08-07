@@ -16,6 +16,8 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
@@ -44,9 +46,11 @@ import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.os.Looper.getMainLooper;
 import static com.byteshaft.healthvideo.MainActivity.serverThread;
 import static com.byteshaft.healthvideo.MainActivity.wifiP2pDevice;
 import static com.byteshaft.healthvideo.fragments.LocalFilesFragment.convertToStringRepresentation;
@@ -251,11 +255,16 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private void getDataFromStream(Socket socket) throws IOException {
         Log.i("GetDataFromStream", "--------------- Start");
         InputStream inputStream = socket.getInputStream();
+        Log.i("GetDataFromStream", "--------------- after inputstream");
         byte[] input = Utils.getInputStreamByteArray(inputStream);
+        Log.i("GetDataFromStream", "--------------- after input");;
         try {
             ObjectInputStream dIn = null;
+
             try {
+                Log.i("GetDataFromStream", "--------------- before obkect inputstream");
                 dIn = new ObjectInputStream(new ByteArrayInputStream(input));
+                Log.i("GetDataFromStream", "--------------- after object inputstream");
                 Log.i("GetDataFromStream", "after object");
                 boolean done = false;
                 while (!done) {
@@ -351,14 +360,14 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     }
                 }
             } catch (ClassNotFoundException e) {
-
+                Log.e(getClass().getSimpleName(), "------------- Exception ClassNotFoundException");
             } finally {
                 if (dIn != null) {
                     dIn.close();
                 }
             }
         } catch (StreamCorruptedException e) {
-//            e.printStackTrace();
+            mMainThreadHandler = new Handler(Looper.getMainLooper());
             DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(input));
             String name = dataInputStream.readUTF();
             long size = dataInputStream.readLong();
@@ -373,6 +382,15 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             }
             Log.i("File", dirs.getAbsolutePath());
             Log.i("File", f.getAbsolutePath());
+            AppGlobals.showFileProgress("Receiving", f.getName().split("\\|")[2], R.drawable.downlaod);
+
+//            mMainThreadHandler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//
+//                }
+//            });
+
             Log.d(getClass().getSimpleName(), "server: copying files " + f.toString());
             copyFile(dataInputStream, new FileOutputStream(f), size);
             Log.i("GetDataFromStream", "----------- END");
@@ -439,12 +457,19 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 //
 //	}
 
-    public static boolean copyFile(DataInputStream inputStream, OutputStream out, long size) throws IOException {
+    private static int mSent = 0;
+    private static long mSize;
+    private Handler mMainThreadHandler = null;
+    long startTime;
+    long elapsedTime = 0L;
+
+    public boolean copyFile(DataInputStream inputStream, OutputStream out, long size) throws IOException {
         Log.i("TAG", "start");
-        byte buf[] = new byte[1024];
+        byte buf[] = new byte[192];
         int bytesRead;
-        int mSent = 0;
+        mSent = 0;
         int len;
+        mSize = size;
         Log.i("TAG", "TRY");
         try {
             Log.i("TAG", "before while");
@@ -453,6 +478,24 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 out.write(buf, 0, bytesRead);
                 size -= bytesRead;
                 mSent += bytesRead;
+                if (elapsedTime > 500) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            AppGlobals.updateFileProgress((int) (mSent / mSize * 100));
+                            startTime = System.currentTimeMillis();
+                            elapsedTime = 0;
+
+                        }
+                    });
+                } else {
+                    elapsedTime = new Date().getTime() - startTime;
+                }
+//                mMainThreadHandler.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        AppGlobals.updateFileProgress((int) (mSent / mSize * 100));                    }
+//                });
 //            while (size > 0 && ( = inputStream.read(buf)) != size) {
 //                out.write(buf, 0, len);
 //                Log.i("TAG", "inside while");

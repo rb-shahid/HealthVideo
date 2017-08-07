@@ -11,6 +11,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -352,5 +353,4 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
         serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
         startService(serviceIntent);
     }
-
 }

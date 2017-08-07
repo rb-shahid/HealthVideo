@@ -66,14 +66,12 @@ public class FileTransferService extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		mMainThreadHandler = new Handler(getMainLooper());
-		Context context = getApplicationContext();
 		if (intent.getAction().equals(ACTION_SEND_FILE)) {
 			Uri fileUri = Uri.parse(intent.getExtras().getString(EXTRAS_FILE_PATH));
 			String host = intent.getExtras().getString(EXTRAS_ADDRESS);
 			String utfData = intent.getExtras().getString(EXTRAS_UTF);
 			Socket socket = new Socket();
 			int port = intent.getExtras().getInt(EXTRAS_PORT);
-
 			try {
 				Log.d(WifiActivity.TAG, "Opening client socket - ");
 				socket.bind(null);
@@ -83,33 +81,27 @@ public class FileTransferService extends IntentService {
 				OutputStream stream = socket.getOutputStream();
                 DataOutputStream dos = new DataOutputStream(stream);
                 dos.writeUTF(utfData);
-//
-//                ContentResolver cr = context.getContentResolver();
-//                InputStream is = null;
-//                try {
-//                    is = cr.openInputStream(fileUri);
-//                } catch (FileNotFoundException e) {
-//                    Log.d(getClass().getSimpleName(), e.toString());
-//                }
 
                 File myFile = new File(fileUri.getPath());
                 FileInputStream fileInputStream = new FileInputStream(myFile);
                 BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
                 DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
-                Log.d(getClass().getSimpleName(), "Client " + myFile.isFile());
                 Log.d(getClass().getSimpleName(), "Client: Data written " + myFile.getAbsoluteFile().length());
                 dos.writeLong(myFile.length());
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[192];
                 int bytesRead;
                 int uploaded = 0;
+                AppGlobals.showFileProgress("Sending", myFile.getName().split("\\|")[2], android.R.drawable.ic_menu_upload_you_tube);
                 while ((bytesRead = dataInputStream.read(buffer)) != -1) {
                     dos.write(buffer, 0, bytesRead);
                     uploaded += bytesRead;
                     int progress = (int)
                             ((float) uploaded / myFile.length() * 100);
+                    AppGlobals.updateFileProgress(progress);
 //                    Log.i("TAG", "progress" + progress);
                     dos.flush();
                 }
+                dos.close();
 //				DeviceDetailFragment.copyFile(is, stream);
 			} catch (IOException e) {
 				Log.e(getClass().getSimpleName(), e.getMessage());

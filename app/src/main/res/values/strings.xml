@@ -84,5 +84,7 @@
     <string name="send">Send</string>
     <string name="cancel">Cancel</string>
     <string name="connection_abort">Aborting connection</string>
+    <string name="check_internet">please check your internet connection and try again</string>
+
 
 </resources>

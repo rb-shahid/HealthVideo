@@ -47,6 +47,7 @@ public class GetLocation  implements GoogleApiClient.ConnectionCallbacks,
             this.file = file;
         } else {
             this.fileId = fileId;
+            Log.e("TAG", "File id" + fileId);
         }
     }
 

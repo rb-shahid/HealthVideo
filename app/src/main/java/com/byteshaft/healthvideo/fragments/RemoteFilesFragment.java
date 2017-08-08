@@ -28,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.MainActivity;
@@ -422,6 +423,9 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                     output.write(data, 0, count);
                 }
             } catch (Exception e) {
+                Toast.makeText(AppGlobals.getContext(), AppGlobals.getContext()
+                                .getResources().getString(R.string.check_internet),
+                        Toast.LENGTH_SHORT).show();
                 return e.toString();
             } finally {
                 try {
@@ -430,6 +434,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                     if (input != null)
                         input.close();
                 } catch (IOException ignored) {
+
                 }
 
                 if (connection != null)
@@ -448,18 +453,22 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            Log.i("TAG", "DONE " + s);
-            String[] file = s.split("-");
-            Log.i("TAG", "DONE " + file[0]);
-            Log.i("TAG", "DONE " + file[1]);
-            if (foreground) {
-                LocalFilesFragment.getInstance().readFiles();
-                alreadyExistFiles.add(file[1]+file[0]);
-                remoteFilesAdapter.notifyDataSetChanged();
+            if (s.length() > 0) {
+                Log.i("TAG", "DONE " + s);
+                String[] file = s.split(".");
+                String[] spilitted = file[1].split("-");
+                if (foreground) {
+                    LocalFilesFragment.getInstance().readFiles();
+                    alreadyExistFiles.add(spilitted[1] + spilitted[0]);
+                    remoteFilesAdapter.notifyDataSetChanged();
+                }
+                GetLocation getLocation = new GetLocation(RemoteFilesFragment.this);
+                getLocation.acquireLocation(spilitted[1], false, null);
+            } else {
+                Toast.makeText(AppGlobals.getContext(), AppGlobals.getContext()
+                                .getResources().getString(R.string.check_internet),
+                        Toast.LENGTH_SHORT).show();
             }
-//            acquireLocation(file[1], false);
-            GetLocation getLocation = new GetLocation(RemoteFilesFragment.this);
-            getLocation.acquireLocation(file[1], false, null);
         }
     }
 

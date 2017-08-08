@@ -43,6 +43,7 @@ public class AppGlobals extends Application {
     public static ArrayList<DataFile> requestedFileArrayList;
     public static int senderCounter = 0;
     private static NotificationCompat.Builder builder;
+    private static String LOGTAG = "LOGTAG ";
 
 
     @Override
@@ -55,6 +56,10 @@ public class AppGlobals extends Application {
         normalTypeFace = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/simple.ttf");
         moreBold = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/more_bold.ttf");
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    }
+
+    public static String getLogTag(Class aClass) {
+        return LOGTAG + aClass.getSimpleName();
     }
 
     public static NotificationCompat.Builder getBuilder() {

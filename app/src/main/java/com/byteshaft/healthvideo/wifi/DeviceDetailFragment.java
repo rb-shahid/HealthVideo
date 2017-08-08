@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
+import com.byteshaft.healthvideo.database.DatabaseHelpers;
 import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.interfaces.OnLocationAcquired;
 import com.byteshaft.healthvideo.serializers.DataFile;
@@ -284,6 +285,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             ObjectInputStream object = new ObjectInputStream(dIn);
                             Log.e("TAG", "Received Array");
                             NurseDetails nurseDetails = (NurseDetails) object.readObject();
+                            DatabaseHelpers databaseHelpers = new DatabaseHelpers(AppGlobals.getContext());
+                            databaseHelpers.createNewEntry(nurseDetails);
                             Log.e("TAG", "Received " + nurseDetails.getLocation());
                             done = true;
                             break;

@@ -16,7 +16,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.ContextCompat;
@@ -32,23 +31,20 @@ import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
-import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.interfaces.OnLocationAcquired;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.serializers.NurseDetails;
+import com.byteshaft.healthvideo.utils.GetLocation;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
-import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -56,7 +52,6 @@ import java.util.Date;
 import java.util.logging.Logger;
 
 import static android.content.Context.MODE_PRIVATE;
-import static android.os.Looper.getMainLooper;
 import static com.byteshaft.healthvideo.MainActivity.serverThread;
 import static com.byteshaft.healthvideo.MainActivity.wifiP2pDevice;
 import static com.byteshaft.healthvideo.fragments.LocalFilesFragment.convertToStringRepresentation;
@@ -287,82 +282,30 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             break;
                         case AppGlobals.DATA_TYPE_NURSE_DATA:
                             ObjectInputStream object = new ObjectInputStream(dIn);
-                            Log.i("TAG", "Received Array");
+                            Log.e("TAG", "Received Array");
                             NurseDetails nurseDetails = (NurseDetails) object.readObject();
-                            Log.i("TAG", "Received " + nurseDetails.getLocation());
-//                            if (fileArrayList.size() > 0) {
-//                                Server.remoteFileArrayList = fileArrayList;
-//                                Log.i("TAG", "received " + fileArrayList.size());
-//                                if (foreground) {
-//                                    getInstance().getActivity().runOnUiThread(new Runnable() {
-//                                        @Override
-//                                        public void run() {
-//                                            Toast.makeText(AppGlobals.getContext(), R.string.received, Toast.LENGTH_SHORT).show();
-//                                        }
-//                                    });
-//                                }
-//                            }
+                            Log.e("TAG", "Received " + nurseDetails.getLocation());
                             done = true;
                             break;
                         case AppGlobals.DATA_TYPE_REQUESTED_ARRAY:
                             Log.i("TAG", "Received Requested Array");
                             ObjectInputStream objectInput = new ObjectInputStream(dIn);
                             ArrayList<DataFile> fileArray = (ArrayList<DataFile>) objectInput.readObject();
-                            final StringBuilder stringBuilder = new StringBuilder();
                             if (fileArray.size() > 0) {
-                                AppGlobals.requestedFileArrayList = fileArray;
-                                for (DataFile dataFile : fileArray) {
-                                    stringBuilder.append(dataFile.getTitle());
-                                    stringBuilder.append(".");
-                                    stringBuilder.append(dataFile.getExtension());
-                                    stringBuilder.append("\n");
-                                }
-                                Log.i("TAG", "received " + fileArray.size());
-                                getInstance().getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(AppGlobals.getContext(), R.string.request_received, Toast.LENGTH_SHORT).show();
-                                        if (foreground) {
-                                            AlertDialog alertDialog;
-                                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new android.view.ContextThemeWrapper(getInstance().getActivity(), R.style.myDialog));
-                                            alertDialogBuilder.setTitle(R.string.file_request);
-                                            alertDialogBuilder.setIcon(R.mipmap.folder);
-                                            alertDialogBuilder.setMessage(stringBuilder.toString()).setCancelable(false)
-                                                    .setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
-                                                        public void onClick(DialogInterface dialog, int id) {
-                                                            WifiActivity.getInstance().sendRequestedFiles();
-                                                            dialog.dismiss();
-
-
-                                                        }
-                                                    });
-                                            alertDialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    dialogInterface.dismiss();
-                                                }
-                                            });
-
-                                            alertDialog = alertDialogBuilder.create();
-                                            alertDialog.show();
-                                        } else {
-                                            fileRequestNotification(stringBuilder.toString());
-                                        }
-                                    }
-                                });
+                                requestAidWorkerToSendFiles(fileArray);
                             }
                             done = true;
                             break;
                         case AppGlobals.DATA_TYPE_FILES:
                             Log.i("TAG", "receiving files");
-                            RemoteFilesFragment.getInstance().getLocation("", true);
                             String name = dIn.readUTF();
                             long size = dIn.readLong();
                             Log.e(getClass().getSimpleName(), "------------- Exception Start");
                             File directory = AppGlobals.getContext().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
                             final File f = new File(directory + "/"
                                     + name);
-                            currentFile = f;
+                            GetLocation getLocation = new GetLocation(DeviceDetailFragment.this);
+                            getLocation.acquireLocation(null, true, f);
                             File dirs = new File(f.getParent());
                             if (!dirs.exists()) {
                                 dirs.mkdir();
@@ -392,6 +335,50 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         } catch (StreamCorruptedException e) {
 
         }
+    }
+
+    public void requestAidWorkerToSendFiles(ArrayList<DataFile> fileArray) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        AppGlobals.requestedFileArrayList = fileArray;
+        for (DataFile dataFile : fileArray) {
+            stringBuilder.append(dataFile.getTitle());
+            stringBuilder.append(".");
+            stringBuilder.append(dataFile.getExtension());
+            stringBuilder.append("\n");
+        }
+        Log.i("TAG", "received " + fileArray.size());
+        getInstance().getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(AppGlobals.getContext(), R.string.request_received, Toast.LENGTH_SHORT).show();
+                if (foreground) {
+                    AlertDialog alertDialog;
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new android.view.ContextThemeWrapper(getInstance().getActivity(), R.style.myDialog));
+                    alertDialogBuilder.setTitle(R.string.file_request);
+                    alertDialogBuilder.setIcon(R.mipmap.folder);
+                    alertDialogBuilder.setMessage(stringBuilder.toString()).setCancelable(false)
+                            .setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    WifiActivity.getInstance().sendRequestedFiles();
+                                    dialog.dismiss();
+
+
+                                }
+                            });
+                    alertDialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    });
+
+                    alertDialog = alertDialogBuilder.create();
+                    alertDialog.show();
+                } else {
+                    fileRequestNotification(stringBuilder.toString());
+                }
+            }
+        });
     }
 
 
@@ -483,15 +470,20 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     }
 
     @Override
-    public void onLocation(Location location) {
+    public void onLocationForNurse(Location location, File file) {
         NurseDetails  nurseDetails = new NurseDetails();
         TelephonyManager telephonyManager = (TelephonyManager) AppGlobals.getContext()
                 .getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         nurseDetails.setDeviceId(telephonyManager.getDeviceId());
-        nurseDetails.setFileId(Integer.parseInt(currentFile.getName().split("\\|")[1]));
+        nurseDetails.setFileId(Integer.parseInt(file.getName().split("\\|")[1]));
         nurseDetails.setLocation(location.getLatitude()+","+location.getLongitude());
         nurseDetails.setCurrentLocation(true);
         nurseDetails.setTimeStamp(String.valueOf(new Date().getTime()));
+        sendNurseDetailsToWorker(nurseDetails);
+    }
+
+    @Override
+    public void onLocationForAidWorker(Location location, String fileId) {
 
     }
 
@@ -499,13 +491,13 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         // Trick to find the ip in the file /proc/net/arp
         // Trick to find the ip in the file /proc/net/arp
         Log.d(WifiActivity.TAG, "sending ----------- Nurse details");
-        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+        Intent serviceIntent = new Intent(AppGlobals.getContext(), FileTransferService.class);
         serviceIntent.setAction(FileTransferService.ACTION_SEND_NURSE_DETAILS);
         serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, nurseDetails);
         serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_TYPE, AppGlobals.DATA_TYPE_NURSE_DATA);
         serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, AppGlobals.clientIp);
         serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
-        getActivity().startService(serviceIntent);
+        AppGlobals.getContext().startService(serviceIntent);
 
     }
 }

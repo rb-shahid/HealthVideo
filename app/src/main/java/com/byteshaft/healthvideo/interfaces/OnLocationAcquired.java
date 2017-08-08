@@ -2,10 +2,13 @@ package com.byteshaft.healthvideo.interfaces;
 
 import android.location.Location;
 
+import java.io.File;
+
 /**
  * Created by s9iper1 on 8/8/17.
  */
 
 public interface OnLocationAcquired {
-    void onLocation(Location location);
+    void onLocationForNurse(Location location, File file);
+    void onLocationForAidWorker(Location location, String fileId);
 }

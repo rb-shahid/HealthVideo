@@ -110,6 +110,9 @@ public class FileTransferService extends IntentService {
 //				DeviceDetailFragment.copyFile(is, stream);
 			} catch (IOException e) {
 				Log.e(getClass().getSimpleName(), e.getMessage());
+                Toast.makeText(this, "please try again", Toast.LENGTH_SHORT).show();
+                AppGlobals.removeNotification();
+                DeviceDetailFragment.getInstance().requestAidWorkerToSendFiles(AppGlobals.requestedFileArrayList);
 			} finally {
 				if (socket != null) {
 					if (socket.isConnected()) {
@@ -189,7 +192,7 @@ public class FileTransferService extends IntentService {
                 objectOutputStream.writeObject(fileUri);
                 stream.flush();
                 objectOutputStream.flush();
-                Log.d(getClass().getSimpleName(), "Client: Data written");
+                Log.e(getClass().getSimpleName(), "Client: Data written");
                 mMainThreadHandler.post(new Runnable() {
                     @Override
                     public void run() {

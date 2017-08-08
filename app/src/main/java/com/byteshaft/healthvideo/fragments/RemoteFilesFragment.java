@@ -34,6 +34,7 @@ import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.interfaces.OnLocationAcquired;
 import com.byteshaft.healthvideo.serializers.DataFile;
+import com.byteshaft.healthvideo.utils.GetLocation;
 import com.byteshaft.healthvideo.utils.Helpers;
 import com.byteshaft.requests.HttpRequest;
 import com.google.android.gms.common.ConnectionResult;
@@ -66,9 +67,7 @@ import static android.content.Context.MODE_PRIVATE;
  */
 
 public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReadyStateChangeListener,
-        HttpRequest.OnErrorListener, AdapterView.OnItemClickListener,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener{
+        HttpRequest.OnErrorListener, AdapterView.OnItemClickListener, OnLocationAcquired{
 
     private View mBaseView;
     private ListView mListView;
@@ -306,6 +305,17 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         Log.i("TAG", "Download " + toBeDownload);
     }
 
+    @Override
+    public void onLocationForNurse(Location location, File file) {
+
+    }
+
+    @Override
+    public void onLocationForAidWorker(Location location, String fileId) {
+        sendProgressUpdateForSuccessDownload(fileId, location.getLatitude() + "," + location.getLongitude(), true);
+
+    }
+
     private class RemoteFilesAdapter extends ArrayAdapter<DataFile> {
 
         private ViewHolder viewHolder;
@@ -447,7 +457,9 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 alreadyExistFiles.add(file[1]+file[0]);
                 remoteFilesAdapter.notifyDataSetChanged();
             }
-            getLocation(file[1], false);
+//            acquireLocation(file[1], false);
+            GetLocation getLocation = new GetLocation(RemoteFilesFragment.this);
+            getLocation.acquireLocation(file[1], false, null);
         }
     }
 
@@ -509,93 +521,5 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             e.printStackTrace();
         }
         request.send(jsonObject.toString());
-    }
-
-
-    /**
-     * Location code
-     */
-
-    private LocationRequest mLocationRequest;
-    private GoogleApiClient mGoogleApiClient;
-    private String fileId;
-    private int locationCounter = 0;
-    private OnLocationAcquired onLocationAcquired;
-    private boolean forNurse = false;
-
-    public void getLocation(String fileId, boolean forNurse) {
-        buildGoogleApiClient();
-        mGoogleApiClient.connect();
-        this.fileId = fileId;
-        locationCounter = 0;
-        this.forNurse = forNurse;
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(AppGlobals.getContext())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        startLocationUpdates();
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
-    public void startLocationUpdates() {
-        long INTERVAL = 0;
-        long FASTEST_INTERVAL = 0;
-        if (ActivityCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(INTERVAL);
-        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Log.d("TAG", "Location changed called" + "Lat " + location.getLatitude() + ", Lng "+ location.getLongitude());
-        if (locationCounter >= 1) {
-            stopLocationUpdate();
-            if (forNurse) {
-                onLocationAcquired.onLocation(location);
-            } else {
-                sendProgressUpdateForSuccessDownload(fileId, location.getLatitude() + "," + location.getLongitude(), true);
-            }
-        }
-        locationCounter++;
-    }
-
-    private void stopLocationUpdate() {
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-            mGoogleApiClient.disconnect();
-        }
     }
 }

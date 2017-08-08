@@ -142,12 +142,12 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
             case R.id.delete:
                 ArrayList<Integer> delete = new ArrayList<>();
                 int count = 0;
-                ArrayList<String> deleted = new ArrayList<>();
+                ArrayList<Integer> deleted = new ArrayList<>();
                 for (Map.Entry<Integer, DataFile> entry : toBeDelete.entrySet()) {
                     Integer key = entry.getKey();
                     DataFile file = entry.getValue();
                     File toBeDelete = new File(file.getUrl());
-                    deleted.add(file.getUuid());
+                    deleted.add(file.getId());
                     String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
                             String.valueOf(file.getId())};
                     if (toBeDelete.delete())
@@ -189,16 +189,11 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
 
             }
         });
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("fileid", files);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        request.open("DELETE", String.format("%suser_delete_file", AppGlobals.BASE_URL));
+        request.open("DELETE", String.format("%suser_delete_file?fileid=%s", AppGlobals.BASE_URL, files));
         request.setRequestHeader("authorization",
                 AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
-        request.send(jsonObject.toString());
+        Log.i("TAG", " token: " + AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
+        request.send();
     }
 
     @Override

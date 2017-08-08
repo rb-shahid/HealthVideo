@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -22,6 +23,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.AppCompatButton;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,8 +32,11 @@ import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
+import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
+import com.byteshaft.healthvideo.interfaces.OnLocationAcquired;
 import com.byteshaft.healthvideo.serializers.DataFile;
+import com.byteshaft.healthvideo.serializers.NurseDetails;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -56,7 +61,7 @@ import static com.byteshaft.healthvideo.MainActivity.serverThread;
 import static com.byteshaft.healthvideo.MainActivity.wifiP2pDevice;
 import static com.byteshaft.healthvideo.fragments.LocalFilesFragment.convertToStringRepresentation;
 
-public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
+public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener, OnLocationAcquired {
 
     public static final String IP_SERVER = "192.168.49.1";
     public static int PORT = 8988;
@@ -69,6 +74,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private AppCompatButton sendArrayButton;
     private ArrayList<DataFile> dataFileArrayList;
     public static boolean foreground = false;
+    private File currentFile;
 
     public static DeviceDetailFragment getInstance() {
         return instance;
@@ -279,6 +285,25 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             }
                             done = true;
                             break;
+                        case AppGlobals.DATA_TYPE_NURSE_DATA:
+                            ObjectInputStream object = new ObjectInputStream(dIn);
+                            Log.i("TAG", "Received Array");
+                            NurseDetails nurseDetails = (NurseDetails) object.readObject();
+                            Log.i("TAG", "Received " + nurseDetails.getLocation());
+//                            if (fileArrayList.size() > 0) {
+//                                Server.remoteFileArrayList = fileArrayList;
+//                                Log.i("TAG", "received " + fileArrayList.size());
+//                                if (foreground) {
+//                                    getInstance().getActivity().runOnUiThread(new Runnable() {
+//                                        @Override
+//                                        public void run() {
+//                                            Toast.makeText(AppGlobals.getContext(), R.string.received, Toast.LENGTH_SHORT).show();
+//                                        }
+//                                    });
+//                                }
+//                            }
+                            done = true;
+                            break;
                         case AppGlobals.DATA_TYPE_REQUESTED_ARRAY:
                             Log.i("TAG", "Received Requested Array");
                             ObjectInputStream objectInput = new ObjectInputStream(dIn);
@@ -328,14 +353,16 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             }
                             done = true;
                             break;
-                        case AppGlobals.DATA_TYPE_FILES: // Type C
+                        case AppGlobals.DATA_TYPE_FILES:
                             Log.i("TAG", "receiving files");
+                            RemoteFilesFragment.getInstance().getLocation("", true);
                             String name = dIn.readUTF();
                             long size = dIn.readLong();
                             Log.e(getClass().getSimpleName(), "------------- Exception Start");
                             File directory = AppGlobals.getContext().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
                             final File f = new File(directory + "/"
                                     + name);
+                            currentFile = f;
                             File dirs = new File(f.getParent());
                             if (!dirs.exists()) {
                                 dirs.mkdir();
@@ -453,5 +480,32 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
         notificationManager.notify(AppGlobals.FILE_NOTIFICATION_ID,
                 newMessageNotification);
+    }
+
+    @Override
+    public void onLocation(Location location) {
+        NurseDetails  nurseDetails = new NurseDetails();
+        TelephonyManager telephonyManager = (TelephonyManager) AppGlobals.getContext()
+                .getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+        nurseDetails.setDeviceId(telephonyManager.getDeviceId());
+        nurseDetails.setFileId(Integer.parseInt(currentFile.getName().split("\\|")[1]));
+        nurseDetails.setLocation(location.getLatitude()+","+location.getLongitude());
+        nurseDetails.setCurrentLocation(true);
+        nurseDetails.setTimeStamp(String.valueOf(new Date().getTime()));
+
+    }
+
+    private void sendNurseDetailsToWorker(NurseDetails nurseDetails) {
+        // Trick to find the ip in the file /proc/net/arp
+        // Trick to find the ip in the file /proc/net/arp
+        Log.d(WifiActivity.TAG, "sending ----------- Nurse details");
+        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+        serviceIntent.setAction(FileTransferService.ACTION_SEND_NURSE_DETAILS);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, nurseDetails);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_TYPE, AppGlobals.DATA_TYPE_NURSE_DATA);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, AppGlobals.clientIp);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
+        getActivity().startService(serviceIntent);
+
     }
 }

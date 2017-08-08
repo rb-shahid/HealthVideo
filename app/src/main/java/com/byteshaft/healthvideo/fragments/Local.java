@@ -141,63 +141,23 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
             case R.id.delete:
                 ArrayList<Integer> delete = new ArrayList<>();
                 int count = 0;
-                ArrayList<String> deleted = new ArrayList<>();
                 for (Map.Entry<Integer, DataFile> entry : toBeDelete.entrySet()) {
                     Integer key = entry.getKey();
                     DataFile file = entry.getValue();
                     File toBeDelete = new File(file.getUrl());
-                    deleted.add(file.getUuid());
                     String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
                             String.valueOf(file.getId())};
                     if (toBeDelete.delete())
                         Log.i("TAG", String.valueOf(Integer.parseInt(strings[2])));
                     delete.add(Integer.parseInt(strings[2]));
                     Log.i("TAG", "Name "+key+" " + strings[0]+" "+strings[1]);
-                    alreadyExistFiles.remove(strings[3]+strings[0]+"."+strings[1]);
+                    dataFileArrayList.remove(count);
                 }
-                Log.i("TAG", deleted.toString().replace("[", "").replace("]", ""));
                 readFiles();
                 toBeDelete = new HashMap<>();
-                sendDeletedFileUpdate(deleted.toString().replace("[", "").replace("]", ""));
                 return true;
             default: return false;
         }
-    }
-
-    private void sendDeletedFileUpdate(String files) {
-        HttpRequest request = new HttpRequest(getActivity());
-        request.setOnReadyStateChangeListener(new HttpRequest.OnReadyStateChangeListener() {
-            @Override
-            public void onReadyStateChange(HttpRequest request, int readyState) {
-                switch (readyState) {
-                    case HttpRequest.STATE_DONE:
-                        switch (request.getStatus()) {
-                            case HttpURLConnection.HTTP_OK:
-                                System.out.println(request.getResponseText());
-                                break;
-                            case HttpURLConnection.HTTP_BAD_REQUEST:
-                                System.out.println(request.getResponseText());
-                                break;
-                        }
-                }
-            }
-        });
-        request.setOnErrorListener(new HttpRequest.OnErrorListener() {
-            @Override
-            public void onError(HttpRequest request, int readyState, short error, Exception exception) {
-
-            }
-        });
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("fileid", files);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        request.open("DELETE", String.format("%suser_delete_file", AppGlobals.BASE_URL));
-        request.setRequestHeader("authorization",
-                AppGlobals.getStringFromSharedPreferences(AppGlobals.KEY_TOKEN));
-        request.send(jsonObject.toString());
     }
 
     @Override

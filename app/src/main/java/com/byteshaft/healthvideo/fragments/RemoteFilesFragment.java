@@ -32,6 +32,7 @@ import android.widget.TextView;
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.MainActivity;
 import com.byteshaft.healthvideo.R;
+import com.byteshaft.healthvideo.interfaces.OnLocationAcquired;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.utils.Helpers;
 import com.byteshaft.requests.HttpRequest;
@@ -88,10 +89,16 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     private final int PERMISSION_REQUEST = 10;
     private int counter = 0;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private static RemoteFilesFragment instance;
+
+    public static RemoteFilesFragment getInstance() {
+        return instance;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
+        instance = this;
         mBaseView = inflater.inflate(R.layout.remote_files_fragment, container, false);
         remoteFileArrayList = new ArrayList<>();
         toBeDownload = new HashMap<>();
@@ -440,7 +447,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 alreadyExistFiles.add(file[1]+file[0]);
                 remoteFilesAdapter.notifyDataSetChanged();
             }
-            getLocation(file[1]);
+            getLocation(file[1], false);
         }
     }
 
@@ -513,12 +520,15 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     private GoogleApiClient mGoogleApiClient;
     private String fileId;
     private int locationCounter = 0;
+    private OnLocationAcquired onLocationAcquired;
+    private boolean forNurse = false;
 
-    private void getLocation(String fileId) {
+    public void getLocation(String fileId, boolean forNurse) {
         buildGoogleApiClient();
         mGoogleApiClient.connect();
         this.fileId = fileId;
         locationCounter = 0;
+        this.forNurse = forNurse;
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -573,7 +583,11 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         Log.d("TAG", "Location changed called" + "Lat " + location.getLatitude() + ", Lng "+ location.getLongitude());
         if (locationCounter >= 1) {
             stopLocationUpdate();
-            sendProgressUpdateForSuccessDownload(fileId, location.getLatitude()+"," + location.getLongitude(), true);
+            if (forNurse) {
+                onLocationAcquired.onLocation(location);
+            } else {
+                sendProgressUpdateForSuccessDownload(fileId, location.getLatitude() + "," + location.getLongitude(), true);
+            }
         }
         locationCounter++;
     }

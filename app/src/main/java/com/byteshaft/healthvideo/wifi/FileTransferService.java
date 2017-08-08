@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.serializers.DataFile;
+import com.byteshaft.healthvideo.serializers.NurseDetails;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -41,6 +42,7 @@ public class FileTransferService extends IntentService {
 	private static final int SOCKET_TIMEOUT = 5000;
 	public static final String ACTION_SEND_FILE = "com.byteshaft.health_video.SEND_FILE";
 	public static final String ACTION_SEND_ARRAY = "com.byteshaft.health_video.SEND_ARRAY";
+    public static final String ACTION_SEND_NURSE_DETAILS = "com.byteshaft.health_video.SEND_NURSE_DETAILS";
 	public static final String EXTRAS_FILE_PATH = "file_url";
 	public static final String EXTRAS_DATA_FILES = "data_files";
 	public static final String EXTRAS_ADDRESS = "go_host";
@@ -168,6 +170,53 @@ public class FileTransferService extends IntentService {
 				}
 			}
 
-		}
+		} else if (intent.getAction().equals(ACTION_SEND_NURSE_DETAILS)) {
+            NurseDetails fileUri = (NurseDetails) intent.getExtras().getSerializable(EXTRAS_DATA_FILES);
+            String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            Log.d(getClass().getSimpleName(), "host   " + host);
+            int dataType = intent.getIntExtra(EXTRAS_DATA_TYPE, 0);
+            Socket socket = new Socket();
+            int port = intent.getExtras().getInt(EXTRAS_PORT);
+            try {
+                Log.d(getClass().getSimpleName(), "Opening client socket - ");
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+
+                Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
+                DataOutputStream stream = new DataOutputStream(socket.getOutputStream());
+                stream.writeByte(dataType);
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(stream);
+                objectOutputStream.writeObject(fileUri);
+                stream.flush();
+                objectOutputStream.flush();
+                Log.d(getClass().getSimpleName(), "Client: Data written");
+                mMainThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(AppGlobals.getContext(), "sent", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (IOException e) {
+                Log.e(getClass().getSimpleName(), e.getMessage());
+                mMainThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(AppGlobals.getContext(), "Try turning wifi off and on again", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } finally {
+                if (socket != null) {
+                    if (socket.isConnected()) {
+                        try {
+                            socket.close();
+                        } catch (IOException e) {
+                            // Give up
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+
+        }
 	}
 }

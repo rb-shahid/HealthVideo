@@ -8,6 +8,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -134,14 +136,18 @@ public class Utils {
 		}
 	}
 
+	private static InputStream inputStream;
+
 	public static byte[] getInputStreamByteArray(InputStream input) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		inputStream = input;
 		byte[] buffer = new byte[1024];
 		int len;
 
 		try {
 			while ((len = input.read(buffer)) > -1) {
 				baos.write(buffer, 0, len);
+				Log.i("GetDataFromStream", "-------------- progress " + ((len/ buffer.length) * 100));
 			}
 			baos.flush();
 		} catch (IOException ioe) {

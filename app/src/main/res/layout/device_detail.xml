@@ -34,15 +34,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
+                android:enabled="false"
                 android:visibility="invisible"
                 android:text="@string/send_array" />
 
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/btn_send_files_again"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="@string/send_files" />
         </LinearLayout>
         <!--<TextView-->
             <!--android:id="@+id/device_address"-->

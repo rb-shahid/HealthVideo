@@ -80,6 +80,7 @@ public class FileTransferService extends IntentService {
 				Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
 				OutputStream stream = socket.getOutputStream();
                 DataOutputStream dos = new DataOutputStream(stream);
+                dos.writeByte(AppGlobals.DATA_TYPE_FILES);
                 dos.writeUTF(utfData);
 
                 File myFile = new File(fileUri.getPath());
@@ -88,19 +89,21 @@ public class FileTransferService extends IntentService {
                 DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
                 Log.d(getClass().getSimpleName(), "Client: Data written " + myFile.getAbsoluteFile().length());
                 dos.writeLong(myFile.length());
-                byte[] buffer = new byte[192];
+                byte[] buffer = new byte[1024];
                 int bytesRead;
                 int uploaded = 0;
-                AppGlobals.showFileProgress("Sending", myFile.getName().split("\\|")[2], android.R.drawable.ic_menu_upload_you_tube);
+                AppGlobals.showFileProgress("Sending", myFile.getName().split("\\|")[2],
+						android.R.drawable.ic_menu_upload_you_tube, 100);
                 while ((bytesRead = dataInputStream.read(buffer)) != -1) {
                     dos.write(buffer, 0, bytesRead);
                     uploaded += bytesRead;
                     int progress = (int)
                             ((float) uploaded / myFile.length() * 100);
-                    AppGlobals.updateFileProgress(progress);
+                    AppGlobals.updateFileProgress(progress, 100);
 //                    Log.i("TAG", "progress" + progress);
                     dos.flush();
                 }
+                AppGlobals.removeNotification();
                 dos.close();
 //				DeviceDetailFragment.copyFile(is, stream);
 			} catch (IOException e) {
@@ -131,9 +134,12 @@ public class FileTransferService extends IntentService {
 				socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
 				Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
-				ObjectOutputStream stream = new ObjectOutputStream(socket.getOutputStream());
+				DataOutputStream stream = new DataOutputStream(socket.getOutputStream());
 				stream.writeByte(dataType);
-				stream.writeObject(fileUri);
+				ObjectOutputStream objectOutputStream = new ObjectOutputStream(stream);
+				objectOutputStream.writeObject(fileUri);
+				stream.flush();
+				objectOutputStream.flush();
 				Log.d(getClass().getSimpleName(), "Client: Data written");
 				mMainThreadHandler.post(new Runnable() {
 					@Override

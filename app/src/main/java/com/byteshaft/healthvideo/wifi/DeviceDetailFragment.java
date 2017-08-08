@@ -40,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 import java.net.HttpURLConnection;
@@ -68,7 +69,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private AppCompatButton sendArrayButton;
     private ArrayList<DataFile> dataFileArrayList;
     public static boolean foreground = false;
-    public AppCompatButton sendFiles;
 
     public static DeviceDetailFragment getInstance() {
         return instance;
@@ -85,22 +85,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         foreground = true;
         mContentView = inflater.inflate(R.layout.device_detail, null);
         sendArrayButton = (AppCompatButton) mContentView.findViewById(R.id.btn_send_files);
-        sendFiles = (AppCompatButton) mContentView.findViewById(R.id.btn_send_files_again);
-        sendFiles.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (AppGlobals.isLogin() && AppGlobals.USER_TYPE == 1) {
-                    WifiActivity.getInstance().sendRequestedFiles();
-                } else {
-                    Log.i("TAG", "running" + serverRunning);
-                    Log.i("TAG", "running" + serverThread.isAlive());
-                    if (!serverThread.isAlive()) {
-                        serverRunning = false;
-                        startServer();
-                    }
-                }
-            }
-        });
         mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -172,19 +156,23 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         if (wifiP2pDevice == null) {
             Toast.makeText(getActivity(), R.string.try_turning_wifi_off_on, Toast.LENGTH_SHORT).show();
         }
-        String clientMacFixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
-        String clientIP = Utils.getIPFromMac(clientMacFixed);
-        Log.d(WifiActivity.TAG, "sending ----------- files " + dataFileArrayList.size());
-        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-        serviceIntent.setAction(FileTransferService.ACTION_SEND_ARRAY);
-        serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, dataFileArrayList);
-        if (localIP.equals(IP_SERVER)) {
-            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
+        if (wifiP2pDevice == null) {
+            ((DeviceListFragment.DeviceActionListener) getActivity()).disconnect();
         } else {
-            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
+            String clientMacFixed = new String(wifiP2pDevice.deviceAddress).replace("99", "19");
+            String clientIP = Utils.getIPFromMac(clientMacFixed);
+            Log.d(WifiActivity.TAG, "sending ----------- files " + dataFileArrayList.size());
+            Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_ARRAY);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_DATA_FILES, dataFileArrayList);
+            if (localIP.equals(IP_SERVER)) {
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, clientIP);
+            } else {
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS, IP_SERVER);
+            }
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
+            getActivity().startService(serviceIntent);
         }
-        serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, PORT);
-        getActivity().startService(serviceIntent);
 
     }
 
@@ -202,6 +190,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         }
         // hide the connect button
         mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
+        sendArrayButton.setEnabled(true);
     }
 
     /**
@@ -256,14 +245,14 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         Log.i("GetDataFromStream", "--------------- Start");
         InputStream inputStream = socket.getInputStream();
         Log.i("GetDataFromStream", "--------------- after inputstream");
-        byte[] input = Utils.getInputStreamByteArray(inputStream);
-        Log.i("GetDataFromStream", "--------------- after input");;
+//        byte[] input = Utils.getInputStreamByteArray(inputStream);
+        Log.i("GetDataFromStream", "--------------- after input");
         try {
-            ObjectInputStream dIn = null;
+            DataInputStream dIn = null;
 
             try {
                 Log.i("GetDataFromStream", "--------------- before obkect inputstream");
-                dIn = new ObjectInputStream(new ByteArrayInputStream(input));
+                dIn = new DataInputStream(socket.getInputStream());
                 Log.i("GetDataFromStream", "--------------- after object inputstream");
                 Log.i("GetDataFromStream", "after object");
                 boolean done = false;
@@ -273,8 +262,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     Log.i("GetDataFromStream", "type" + messageType);
                     switch (messageType) {
                         case AppGlobals.DATA_TYPE_ARRAY:
+                            ObjectInputStream objectInputStream = new ObjectInputStream(dIn);
                             Log.i("TAG", "Received Array");
-                            ArrayList<DataFile> fileArrayList = (ArrayList<DataFile>) dIn.readObject();
+                            ArrayList<DataFile> fileArrayList = (ArrayList<DataFile>) objectInputStream.readObject();
                             if (fileArrayList.size() > 0) {
                                 Server.remoteFileArrayList = fileArrayList;
                                 Log.i("TAG", "received " + fileArrayList.size());
@@ -291,7 +281,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             break;
                         case AppGlobals.DATA_TYPE_REQUESTED_ARRAY:
                             Log.i("TAG", "Received Requested Array");
-                            ArrayList<DataFile> fileArray = (ArrayList<DataFile>) dIn.readObject();
+                            ObjectInputStream objectInput = new ObjectInputStream(dIn);
+                            ArrayList<DataFile> fileArray = (ArrayList<DataFile>) objectInput.readObject();
                             final StringBuilder stringBuilder = new StringBuilder();
                             if (fileArray.size() > 0) {
                                 AppGlobals.requestedFileArrayList = fileArray;
@@ -338,25 +329,30 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             done = true;
                             break;
                         case AppGlobals.DATA_TYPE_FILES: // Type C
+                            Log.i("TAG", "receiving files");
+                            String name = dIn.readUTF();
+                            long size = dIn.readLong();
+                            Log.e(getClass().getSimpleName(), "------------- Exception Start");
+                            File directory = AppGlobals.getContext().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+                            final File f = new File(directory + "/"
+                                    + name);
+                            File dirs = new File(f.getParent());
+                            if (!dirs.exists()) {
+                                dirs.mkdir();
+                                f.mkdir();
+                            }
+                            Log.i("File", dirs.getAbsolutePath());
+                            Log.i("File", f.getAbsolutePath());
+                            AppGlobals.showFileProgress("Receiving", f.getName().split("\\|")[2], R.drawable.downlaod,(int) size);
+
+                            Log.d(getClass().getSimpleName(), "server: copying files " + f.toString());
+                            copyFile(dIn, new FileOutputStream(f), size);
+                            Log.i("GetDataFromStream", "----------- END");
+                            Log.d(getClass().getSimpleName(), "Client: Data written " + f.length());
                             done = true;
                             break;
                         default:
                             done = true;
-//				    Log.i("TAG", "image");
-//                    InputStream stream = socket.getInputStream();
-//                    Log.i("TAG", "Receiving File");
-//                    Log.d(getClass().getSimpleName(), "type C");
-//                    final File f = new File(Environment.getExternalStorageDirectory() + "/"
-//                            + AppGlobals.getContext().getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-//                            + ".jpg");
-//
-//                    File dirs = new File(f.getParent());
-//                    if (!dirs.exists())
-//                        dirs.mkdirs();
-//                    f.createNewFile();
-//                    Log.d(getClass().getSimpleName(), "server: copying files " + f.toString());
-//                    copyFile(stream, new FileOutputStream(f));
-//					done = true;
                     }
                 }
             } catch (ClassNotFoundException e) {
@@ -367,95 +363,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 }
             }
         } catch (StreamCorruptedException e) {
-            mMainThreadHandler = new Handler(Looper.getMainLooper());
-            DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(input));
-            String name = dataInputStream.readUTF();
-            long size = dataInputStream.readLong();
-            Log.e(getClass().getSimpleName(), "------------- Exception Start");
-            File directory = AppGlobals.getContext().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
-            final File f = new File(directory +"/"
-                    +name);
-            File dirs = new File(f.getParent());
-            if (!dirs.exists()) {
-                dirs.mkdir();
-                f.mkdir();
-            }
-            Log.i("File", dirs.getAbsolutePath());
-            Log.i("File", f.getAbsolutePath());
-            AppGlobals.showFileProgress("Receiving", f.getName().split("\\|")[2], R.drawable.downlaod);
 
-//            mMainThreadHandler.post(new Runnable() {
-//                @Override
-//                public void run() {
-//
-//                }
-//            });
-
-            Log.d(getClass().getSimpleName(), "server: copying files " + f.toString());
-            copyFile(dataInputStream, new FileOutputStream(f), size);
-            Log.i("GetDataFromStream", "----------- END");
-            Log.d(getClass().getSimpleName(), "Client: Data written " + f.length());
-
-        } catch (IOException e) {
-            Log.e(getClass().getSimpleName(), "Io exception");
-            e.printStackTrace();
         }
     }
-//
-//	public static class ServerAsyncTask extends AsyncTask<Void, Void, String> {
-//
-//		private final Context context;
-//
-//		public ServerAsyncTask(Context context) {
-//			this.context = context;
-//		}
-//
-//		@Override
-//		protected String doInBackground(Void... params) {
-//			try {
-//				ServerSocket serverSocket = new ServerSocket(PORT);
-//				Log.d(WifiActivity.TAG, "Server: Socket opened");
-//				Socket client = serverSocket.accept();
-//				Logger.getLogger("Do in Background").info(client.getInetAddress().getHostAddress());
-//				Logger.getLogger("Do in Background 2").info(client.getInetAddress().toString());
-//				AppGlobals.clientIp = client.getInetAddress().getHostAddress();
-//				getDataFromStream(client);
-//				Log.d(WifiActivity.TAG, "Server: connection done");
-//				final File f = new File(Environment.getExternalStorageDirectory() + "/"
-//						+ context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-//						+ ".jpg");
-//
-//				File dirs = new File(f.getParent());
-//				if (!dirs.exists())
-//					dirs.mkdirs();
-//				f.createNewFile();
-//
-//				Log.d(WifiActivity.TAG, "server: copying files " + f.toString());
-//				InputStream inputstream = client.getInputStream();
-//				copyFile(inputstream, new FileOutputStream(f));
-//				serverSocket.close();
-//				serverRunning = false;
-//				return "";
-//			} catch (IOException e) {
-//				Log.e(WifiActivity.TAG, e.getMessage());
-//				return null;
-//			}
-//		}
-//
-//		@Override
-//		protected void onPostExecute(String result) {
-//			if (result != null) {
-//				Log.i("TAG", "completed");
-//			}
-//
-//		}
-//
-//		@Override
-//		protected void onPreExecute() {
-//
-//		}
-//
-//	}
+
 
     private static int mSent = 0;
     private static long mSize;
@@ -465,12 +376,11 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     public boolean copyFile(DataInputStream inputStream, OutputStream out, long size) throws IOException {
         Log.i("TAG", "start");
-        byte buf[] = new byte[192];
+        byte buf[] = new byte[1024];
         int bytesRead;
         mSent = 0;
-        int len;
         mSize = size;
-        Log.i("TAG", "TRY");
+        Log.i("TAG", "total size " + mSize);
         try {
             Log.i("TAG", "before while");
             while (size > 0 && (bytesRead = inputStream.read(
@@ -478,33 +388,27 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 out.write(buf, 0, bytesRead);
                 size -= bytesRead;
                 mSent += bytesRead;
+//                Log.i("TAG", "progress " + (int) (bytesRead / mSize * 100));
                 if (elapsedTime > 500) {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            AppGlobals.updateFileProgress((int) (mSent / mSize * 100));
+                            AppGlobals.updateFileProgress(mSent,(int) mSize);
                             startTime = System.currentTimeMillis();
                             elapsedTime = 0;
-
+                            Log.i("TAG", "updated" + (mSent));
+                            Log.i("TAG", "updated" + (mSize));
+                            Log.i("TAG", "updated" + (mSent / mSize));
                         }
                     });
                 } else {
                     elapsedTime = new Date().getTime() - startTime;
                 }
-//                mMainThreadHandler.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        AppGlobals.updateFileProgress((int) (mSent / mSize * 100));                    }
-//                });
-//            while (size > 0 && ( = inputStream.read(buf)) != size) {
-//                out.write(buf, 0, len);
-//                Log.i("TAG", "inside while");
 
             }
-            Log.i("TAG", "after while");
+            AppGlobals.removeNotification();
             out.close();
             inputStream.close();
-            Log.d("Copy File", "copied");
         } catch (IOException e) {
             Log.d("Copy File", e.toString());
             return false;

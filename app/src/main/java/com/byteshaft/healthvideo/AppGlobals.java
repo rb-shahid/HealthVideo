@@ -97,19 +97,23 @@ public class AppGlobals extends Application {
         sharedPreferences.edit().clear().commit();
     }
 
-    public static void showFileProgress(String currentTask, String fileName, int id) {
+    public static void showFileProgress(String currentTask, String fileName, int id, int max) {
         NotificationCompat.Builder mBuilder = AppGlobals.getBuilder();
         mBuilder.setContentInfo(currentTask+"...")
                 .setContentText(fileName)
                 .setAutoCancel(false)
                 .setSmallIcon(id);
-        mBuilder.setProgress(100, 0, false);
+        mBuilder.setProgress(max, 0, false);
         AppGlobals.getNotificationManager().notify(AppGlobals.FILE_NOTIFICATION_ID, mBuilder.build());
     }
 
-    public static void updateFileProgress(int progress) {
-        AppGlobals.getBuilder().setProgress(100, progress, false);
+    public static void updateFileProgress(int progress, int max) {
+        AppGlobals.getBuilder().setProgress(max, progress, false);
         AppGlobals.getNotificationManager().notify(AppGlobals.FILE_NOTIFICATION_ID,
                 AppGlobals.getBuilder().build());
+    }
+
+    public static void removeNotification() {
+        AppGlobals.getNotificationManager().cancel(AppGlobals.FILE_NOTIFICATION_ID);
     }
 }

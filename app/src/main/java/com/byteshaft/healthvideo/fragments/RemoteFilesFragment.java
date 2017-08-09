@@ -125,9 +125,9 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
         mListView.setAdapter(remoteFilesAdapter);
         for (File file: filesArray) {
-            Log.i("TAG", "file " + file);
             String[] onlyFileName = file.getName().split("\\|");
             alreadyExistFiles.add(onlyFileName[1]+onlyFileName[2]);
+            Log.i("TAG", "Already exist  " + onlyFileName[1]+onlyFileName[2]);
 //            Log.i("TAG", "Remote file " + onlyFileName[0]+onlyFileName[1]);
         }
         return mBaseView;
@@ -344,9 +344,9 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(dataFile.getId());
             stringBuilder.append(SPACE);
-            if (dataFile.getTitle().length() > 30) {
+            if (dataFile.getTitle().length() > 25) {
                 String bigString = dataFile.getTitle().substring(0, Math.min(
-                        dataFile.getTitle().length(), 30));
+                        dataFile.getTitle().length(), 25));
                 stringBuilder.append(bigString);
                 stringBuilder.append(DOTS);
                 stringBuilder.append(SPACE);
@@ -357,12 +357,11 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             stringBuilder.append(dataFile.getSize());
             viewHolder.fileName.setText(stringBuilder.toString());
             String fullFileName = dataFile.getId()+dataFile.getTitle()+"."+dataFile.getExtension();
-            Log.i("TAG", "Remote file full name " + fullFileName);
+            Log.i("TAG", "Already exist adapter  " + fullFileName);
             if (alreadyExistFiles.contains(fullFileName)) {
                 viewHolder.fileName.setTextColor(getResources().getColor(R.color.already_existing_files));
                 viewHolder.fileName.setTypeface(null, Typeface.BOLD_ITALIC);
                 viewHolder.relativeLayout.setBackgroundColor(getResources().getColor(R.color.already_exist_file_background));
-
             } else {
                 viewHolder.fileName.setTypeface(Typeface.SANS_SERIF);
                 viewHolder.fileName.setTypeface(null, Typeface.BOLD);
@@ -393,6 +392,8 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
 
     private class DownloadTask extends AsyncTask<String, Integer, String> {
 
+        File file;
+
         @Override
         protected String doInBackground(String... sUrl) {
             InputStream input = null;
@@ -409,6 +410,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 int fileLength = connection.getContentLength();
                 input = connection.getInputStream();
                 output = new FileOutputStream(directory+"/"+sUrl[4] +"|"+downloadingNow.get(counter)+"|"+sUrl[2]+"."+sUrl[1]);
+                file = new File(directory+"/"+sUrl[4] +"|"+downloadingNow.get(counter)+"|"+sUrl[2]+"."+sUrl[1]);
                 byte data[] = new byte[4096];
                 long total = 0;
                 int count;
@@ -423,9 +425,18 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                     output.write(data, 0, count);
                 }
             } catch (Exception e) {
-                Toast.makeText(AppGlobals.getContext(), AppGlobals.getContext()
-                                .getResources().getString(R.string.check_internet),
-                        Toast.LENGTH_SHORT).show();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        toBeDownload = new HashMap<>();
+                        file.deleteOnExit();
+                        mNotificationManager.cancel(id);
+                        Toast.makeText(AppGlobals.getContext(), AppGlobals.getContext()
+                                        .getResources().getString(R.string.check_internet),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+
                 return e.toString();
             } finally {
                 try {
@@ -455,15 +466,15 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
             super.onPostExecute(s);
             if (s.length() > 0) {
                 Log.i("TAG", "DONE " + s);
-                String[] file = s.split(".");
-                String[] spilitted = file[1].split("-");
+                String[] file = s.split("\\.");
+                String[] split = file[1].split("-");
                 if (foreground) {
                     LocalFilesFragment.getInstance().readFiles();
-                    alreadyExistFiles.add(spilitted[1] + spilitted[0]);
+                    alreadyExistFiles.add(split[1] + split[0]);
                     remoteFilesAdapter.notifyDataSetChanged();
                 }
                 GetLocation getLocation = new GetLocation(RemoteFilesFragment.this);
-                getLocation.acquireLocation(spilitted[1], false, null);
+                getLocation.acquireLocation(split[1], false, null);
             } else {
                 Toast.makeText(AppGlobals.getContext(), AppGlobals.getContext()
                                 .getResources().getString(R.string.check_internet),

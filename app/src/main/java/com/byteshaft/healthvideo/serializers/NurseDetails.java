@@ -16,7 +16,7 @@ public class NurseDetails implements Serializable{
         this.id = id;
     }
 
-    private int id;
+    private int id = -1;
     private String deviceId;
     private int fileId;
     private String location;

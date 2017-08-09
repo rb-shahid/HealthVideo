@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Build;
@@ -30,11 +31,16 @@ import android.view.SubMenu;
 
 import com.byteshaft.healthvideo.accountfragments.AccountManagerActivity;
 import com.byteshaft.healthvideo.accountfragments.ChangePassword;
+import com.byteshaft.healthvideo.database.DatabaseHelpers;
 import com.byteshaft.healthvideo.fragments.Local;
 import com.byteshaft.healthvideo.fragments.LocalFilesFragment;
 import com.byteshaft.healthvideo.fragments.RemoteFilesFragment;
 import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.utils.CustomTypefaceSpan;
+import com.byteshaft.healthvideo.utils.Helpers;
+import com.byteshaft.healthvideo.utils.InternetBroadCastReceiver;
+
+import static com.byteshaft.healthvideo.utils.InternetBroadCastReceiver.isNetworkAvailable;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -202,6 +208,31 @@ public class MainActivity extends AppCompatActivity
             alertDialog.show();
         } else if (id == R.id.nav_change_password) {
             startActivity(new Intent(getApplicationContext(), ChangePassword.class));
+        } else if (id == R.id.nav_sync) {
+            DatabaseHelpers databaseHelpers = new DatabaseHelpers(getApplicationContext());
+            if (databaseHelpers.getAllNursesDetails().size() > 0) {
+                Helpers.showSnackBar(findViewById(android.R.id.content), getResources().getString(R.string.sync_in_progress));
+                new android.os.Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.e("TAG", "Internet State" + isNetworkAvailable(AppGlobals.getContext()));
+                        if (isNetworkAvailable(AppGlobals.getContext())) {
+                            new InternetBroadCastReceiver.CheckInternet().execute();
+                        }
+                    }
+                }, 5000);
+            } else {
+                Helpers.showSnackBar(findViewById(android.R.id.content), R.string.already_synced);
+            }
+        } else if (id == R.id.nav_privacy_policy) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getResources()
+                    .getString(R.string.privacy_policy_url)));
+            startActivity(browserIntent);
+
+        } else if (id == R.id.nav_support) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getResources()
+                    .getString(R.string.support_url)));
+            startActivity(browserIntent);
         }
 
 

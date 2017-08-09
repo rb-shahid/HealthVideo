@@ -1,10 +1,12 @@
 package com.byteshaft.healthvideo.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,6 +27,7 @@ import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.serializers.DataFile;
 import com.byteshaft.healthvideo.uihelpers.VideoPlayerActivity;
 import com.byteshaft.healthvideo.utils.Helpers;
+import com.byteshaft.healthvideo.wifi.WifiActivity;
 import com.byteshaft.requests.FormData;
 import com.byteshaft.requests.HttpRequest;
 
@@ -140,26 +143,48 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.delete:
-                ArrayList<Integer> delete = new ArrayList<>();
-                int count = 0;
-                ArrayList<Integer> deleted = new ArrayList<>();
-                for (Map.Entry<Integer, DataFile> entry : toBeDelete.entrySet()) {
-                    Integer key = entry.getKey();
-                    DataFile file = entry.getValue();
-                    File toBeDelete = new File(file.getUrl());
-                    deleted.add(file.getId());
-                    String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
-                            String.valueOf(file.getId())};
-                    if (toBeDelete.delete())
-                        Log.i("TAG", String.valueOf(Integer.parseInt(strings[2])));
-                    delete.add(Integer.parseInt(strings[2]));
-                    Log.i("TAG", "Name "+key+" " + strings[0]+" "+strings[1]);
-                    alreadyExistFiles.remove(strings[3]+strings[0]+"."+strings[1]);
-                }
-                Log.i("TAG", deleted.toString().replace("[", "").replace("]", ""));
-                readFiles();
-                toBeDelete = new HashMap<>();
-                sendDeletedFileUpdate(deleted.toString().replace("[", "").replace("]", ""));
+                AlertDialog alertDialog;
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new android.view.ContextThemeWrapper(getInstance().getActivity(), R.style.myDialog));
+                alertDialogBuilder.setTitle(R.string.delete_confirmation);
+                alertDialogBuilder.setIcon(android.R.drawable.ic_menu_delete);
+                alertDialogBuilder.setMessage(getResources().getString(
+                        R.string.want_to_delete)).setCancelable(false)
+                        .setPositiveButton(getResources().getString(R.string.action_delete), new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                                ArrayList<Integer> delete = new ArrayList<>();
+                                int count = 0;
+                                ArrayList<Integer> deleted = new ArrayList<>();
+                                for (Map.Entry<Integer, DataFile> entry : toBeDelete.entrySet()) {
+                                    Integer key = entry.getKey();
+                                    DataFile file = entry.getValue();
+                                    File toBeDelete = new File(file.getUrl());
+                                    deleted.add(file.getId());
+                                    String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
+                                            String.valueOf(file.getId())};
+                                    if (toBeDelete.delete())
+                                        Log.i("TAG", String.valueOf(Integer.parseInt(strings[2])));
+                                    delete.add(Integer.parseInt(strings[2]));
+                                    Log.i("TAG", "Name "+key+" " + strings[0]+" "+strings[1]);
+                                    alreadyExistFiles.remove(strings[3]+strings[0]+"."+strings[1]);
+                                }
+                                Log.i("TAG", deleted.toString().replace("[", "").replace("]", ""));
+                                readFiles();
+                                toBeDelete = new HashMap<>();
+                                sendDeletedFileUpdate(deleted.toString().replace("[", "").replace("]", ""));
+
+
+                            }
+                        });
+                alertDialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                });
+
+                alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
                 return true;
             default: return false;
         }

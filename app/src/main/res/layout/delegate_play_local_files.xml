@@ -18,6 +18,7 @@
         android:id="@+id/open"
         android:src="@android:drawable/ic_media_play"
         android:background="@null"
+        android:padding="5dp"
         android:layout_alignParentRight="true"
         android:layout_centerInParent="true"
         android:layout_width="wrap_content"

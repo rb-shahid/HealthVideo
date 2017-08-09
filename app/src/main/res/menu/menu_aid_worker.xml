@@ -7,42 +7,42 @@
             <menu>
                 <item
                     android:id="@+id/nav_username"
-                    android:title="Username" />
+                    android:title="@string/username" />
                 <item
                     android:id="@+id/nav_logout"
-                    android:title="Logout" />
+                    android:title="@string/logout" />
                 <item
                     android:id="@+id/nav_change_password"
-                    android:title="Change password" />
+                    android:title="@string/change_password" />
             </menu>
         </item>
     </group>
 
     <group android:checkableBehavior="single"
         android:id="@+id/connectivity">
-        <item android:id="@+id/connectivity_item" android:title="Connectivity"
+        <item android:id="@+id/connectivity_item" android:title="@string/connectivity"
             >
             <menu>
                 <item
                     android:id="@+id/nav_wifi_connection"
-                    android:title="Wi-fi connection" />
+                    android:title="@string/wi_fi_connection" />
                 <item
                     android:id="@+id/nav_sync"
-                    android:title="Sync data" />
+                    android:title="@string/sync_data" />
             </menu>
         </item>
     </group>
 
     <group android:checkableBehavior="single"
         android:id="@+id/support">
-    <item android:title="Support">
+    <item android:title="@string/support">
         <menu>
         <item
             android:id="@+id/nav_support"
-            android:title="Support" />
+            android:title="@string/support" />
         <item
             android:id="@+id/nav_privacy_policy"
-            android:title="Privacy policy" />
+            android:title="@string/privacy_policy" />
         </menu>
     </item>
     </group>

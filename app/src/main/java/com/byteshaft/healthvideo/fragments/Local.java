@@ -1,10 +1,13 @@
 package com.byteshaft.healthvideo.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +21,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.MainActivity;
@@ -139,22 +143,42 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.delete:
-                ArrayList<Integer> delete = new ArrayList<>();
-                int count = 0;
-                for (Map.Entry<Integer, DataFile> entry : toBeDelete.entrySet()) {
-                    Integer key = entry.getKey();
-                    DataFile file = entry.getValue();
-                    File toBeDelete = new File(file.getUrl());
-                    String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
-                            String.valueOf(file.getId())};
-                    if (toBeDelete.delete())
-                        Log.i("TAG", String.valueOf(Integer.parseInt(strings[2])));
-                    delete.add(Integer.parseInt(strings[2]));
-                    Log.i("TAG", "Name "+key+" " + strings[0]+" "+strings[1]);
-                    dataFileArrayList.remove(count);
-                }
-                readFiles();
-                toBeDelete = new HashMap<>();
+                AlertDialog alertDialog;
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(new android.view.ContextThemeWrapper(getInstance().getActivity(), R.style.myDialog));
+                alertDialogBuilder.setTitle(R.string.delete_confirmation);
+                alertDialogBuilder.setIcon(android.R.drawable.ic_menu_delete);
+                alertDialogBuilder.setMessage(getResources().getString(
+                        R.string.want_to_delete)).setCancelable(false)
+                        .setPositiveButton(getResources().getString(R.string.action_delete), new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                                ArrayList<Integer> delete = new ArrayList<>();
+                                int count = 0;
+                                for (Map.Entry<Integer, DataFile> entry : toBeDelete.entrySet()) {
+                                    Integer key = entry.getKey();
+                                    DataFile file = entry.getValue();
+                                    File toBeDelete = new File(file.getUrl());
+                                    String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
+                                            String.valueOf(file.getId())};
+                                    if (toBeDelete.delete())
+                                        Log.i("TAG", String.valueOf(Integer.parseInt(strings[2])));
+                                    delete.add(Integer.parseInt(strings[2]));
+                                    Log.i("TAG", "Name "+key+" " + strings[0]+" "+strings[1]);
+                                    dataFileArrayList.remove(count);
+                                }
+                                readFiles();
+                                toBeDelete = new HashMap<>();
+                            }
+                        });
+                alertDialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                });
+
+                alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
                 return true;
             default: return false;
         }
@@ -209,9 +233,9 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(dataFile.getId());
             stringBuilder.append(SPACE);
-            if (dataFile.getTitle().length() > 30) {
+            if (dataFile.getTitle().length() > 20) {
                 String bigString = dataFile.getTitle().substring(0, Math.min(
-                        dataFile.getTitle().length(), 30));
+                        dataFile.getTitle().length(), 20));
                 stringBuilder.append(bigString);
                 stringBuilder.append(DOTS);
                 stringBuilder.append(SPACE);
@@ -237,6 +261,7 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
             viewHolder.open.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    Log.e("TAG", "click");
                     DataFile dataFile = arrayList.get(position);
                     if (dataFile.getExtension().equals("3gp") || dataFile.getExtension().equals("mp4") ||
                             dataFile.getExtension().equals("mkv") || dataFile.getExtension().equals("mov")) {
@@ -245,6 +270,13 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
                         Log.e("TAG", "File path " + path);
                         intent.putExtra("path", path);
                         startActivity(intent);
+                    } else if (dataFile.getExtension().equals("mp3")) {
+//                        Uri uri = Uri.parse(dataFile.getUrl());
+//                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+//                        startActivity(intent);
+//                        Log.e("TAG", "Extension " + dataFile.getExtension());
+                        Toast.makeText(getActivity(), "file must be a video", Toast.LENGTH_SHORT).show();
+
                     }
                 }
             });

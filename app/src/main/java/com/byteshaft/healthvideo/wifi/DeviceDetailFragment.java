@@ -154,7 +154,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         }
 
         String localIP = Utils.getIPAddress(true);
-        // Trick to find the ip in the file /proc/net/arp
         if (wifiP2pDevice == null) {
             Toast.makeText(getActivity(), R.string.try_turning_wifi_off_on, Toast.LENGTH_SHORT).show();
         }

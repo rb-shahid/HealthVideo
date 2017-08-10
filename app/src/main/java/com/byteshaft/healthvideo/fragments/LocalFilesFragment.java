@@ -83,7 +83,7 @@ public class LocalFilesFragment extends Fragment implements AdapterView.OnItemCl
         dataFileArrayList = new ArrayList<>();
         localFileFilesAdapter = new LocalFileFilesAdapter(getActivity().getApplicationContext(), dataFileArrayList);
         mListView.setAdapter(localFileFilesAdapter);
-        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        File files = getActivity().getDir(AppGlobals.INTERNAL_AID_WORKER, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         for (File file: filesArray) {
             Log.i("TAG", file.getAbsolutePath());

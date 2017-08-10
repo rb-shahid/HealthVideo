@@ -79,7 +79,7 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
         mBaseView = inflater.inflate(R.layout.server, container, false);
         remoteFileArrayList = new ArrayList<>();
         toBeDownload = new HashMap<>();
-        directory = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        directory = getActivity().getDir(AppGlobals.INTERNAL_NURSE, MODE_PRIVATE);
         mListView = (ListView) mBaseView.findViewById(R.id.remote_files_list);
         swipeRefreshLayout = (SwipeRefreshLayout) mBaseView.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -91,7 +91,7 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
             }
         });
         mListView.setOnItemClickListener(this);
-        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        File files = getActivity().getDir(AppGlobals.INTERNAL_NURSE, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         Log.i("TAG", "Remote file " + filesArray.length);
         alreadyExistFiles = new ArrayList<>();

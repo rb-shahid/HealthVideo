@@ -107,6 +107,10 @@ public class FileTransferService extends IntentService {
                 }
                 AppGlobals.removeNotification();
                 dos.close();
+				AppGlobals.senderCounter++;
+				if (AppGlobals.senderCounter < AppGlobals.requestedFileArrayList.size()) {
+					WifiActivity.getInstance().sendRequestedFiles();
+				}
 //				DeviceDetailFragment.copyFile(is, stream);
 			} catch (IOException e) {
 				Log.e(getClass().getSimpleName(), e.getMessage());

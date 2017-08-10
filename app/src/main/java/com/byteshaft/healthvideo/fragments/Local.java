@@ -82,7 +82,7 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
         dataFileArrayList = new ArrayList<>();
         localFileFilesAdapter = new LocalFileFilesAdapter(getActivity().getApplicationContext(), dataFileArrayList);
         mListView.setAdapter(localFileFilesAdapter);
-        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        File files = getActivity().getDir(AppGlobals.INTERNAL_NURSE, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         Log.i("TAG", "size" +files.length());
         for (File file: filesArray) {

@@ -137,7 +137,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     private void sendLocalFilesToNurse() {
         dataFileArrayList = new ArrayList<>();
-        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        File files = getActivity().getDir(AppGlobals.INTERNAL_AID_WORKER, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         for (File file : filesArray) {
             Log.i("TAG", file.getAbsolutePath());
@@ -299,11 +299,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             done = true;
                             break;
                         case AppGlobals.DATA_TYPE_FILES:
-                            Log.i("TAG", "receiving files");
                             String name = dIn.readUTF();
                             long size = dIn.readLong();
-                            Log.e(getClass().getSimpleName(), "------------- Exception Start");
-                            File directory = AppGlobals.getContext().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+                            File directory = AppGlobals.getContext().getDir(AppGlobals.INTERNAL_NURSE, MODE_PRIVATE);
                             final File f = new File(directory + "/"
                                     + name);
                             GetLocation getLocation = new GetLocation(DeviceDetailFragment.this);

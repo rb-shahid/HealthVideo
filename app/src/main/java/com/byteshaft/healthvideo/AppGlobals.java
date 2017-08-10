@@ -27,7 +27,8 @@ public class AppGlobals extends Application {
     public static final String KEY_TOKEN = "token";
     public static int USER_TYPE = 0;
     public static String sLanguage = "";
-    public static final String INTERNAL = "internal";
+    public static final String INTERNAL_AID_WORKER = "internalWorker";
+    public static final String INTERNAL_NURSE = "internalNurse";
     public static Typeface boldTypeFace;
     public static Typeface normalTypeFace;
     public static Typeface moreBold;

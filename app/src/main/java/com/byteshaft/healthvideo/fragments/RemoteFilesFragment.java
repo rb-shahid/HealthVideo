@@ -104,7 +104,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         toBeDownload = new HashMap<>();
         mNotificationManager =
                 (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-        directory = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        directory = getActivity().getDir(AppGlobals.INTERNAL_AID_WORKER, MODE_PRIVATE);
         downloadAbleUrl = new ArrayList<>();
         mListView = (ListView) mBaseView.findViewById(R.id.remote_files_list);
         swipeRefreshLayout = (SwipeRefreshLayout) mBaseView.findViewById(R.id.swipe_refresh_layout);
@@ -119,7 +119,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
         });
         mListView.setOnItemClickListener(this);
         getRemoteFiles();
-        File files = getActivity().getDir(AppGlobals.INTERNAL, MODE_PRIVATE);
+        File files = getActivity().getDir(AppGlobals.INTERNAL_AID_WORKER, MODE_PRIVATE);
         File[] filesArray = files.listFiles();
         alreadyExistFiles = new ArrayList<>();
         remoteFilesAdapter = new RemoteFilesAdapter(getActivity().getApplicationContext(), remoteFileArrayList);
@@ -468,9 +468,11 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 Log.i("TAG", "DONE " + s);
                 String[] file = s.split("\\.");
                 String[] split = file[1].split("-");
+                Log.i("TAG", "split " + split[1]);
+                Log.i("TAG", "split " + split[0]);
                 if (foreground) {
                     LocalFilesFragment.getInstance().readFiles();
-                    alreadyExistFiles.add(split[1] + split[0]);
+                    alreadyExistFiles.add(split[1] +file[0] +"."+ split[0]);
                     remoteFilesAdapter.notifyDataSetChanged();
                 }
                 GetLocation getLocation = new GetLocation(RemoteFilesFragment.this);

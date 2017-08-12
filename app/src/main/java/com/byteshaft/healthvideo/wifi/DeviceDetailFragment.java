@@ -32,6 +32,7 @@ import android.widget.Toast;
 import com.byteshaft.healthvideo.AppGlobals;
 import com.byteshaft.healthvideo.R;
 import com.byteshaft.healthvideo.database.DatabaseHelpers;
+import com.byteshaft.healthvideo.fragments.Local;
 import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.interfaces.OnLocationAcquired;
 import com.byteshaft.healthvideo.serializers.DataFile;
@@ -70,7 +71,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private AppCompatButton sendArrayButton;
     private ArrayList<DataFile> dataFileArrayList;
     public static boolean foreground = false;
-    private File currentFile;
+    public static AppCompatButton resend;
 
     public static DeviceDetailFragment getInstance() {
         return instance;
@@ -85,8 +86,19 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         instance = this;
         foreground = true;
+        AppGlobals.sActivity = getActivity();
         mContentView = inflater.inflate(R.layout.device_detail, null);
         sendArrayButton = (AppCompatButton) mContentView.findViewById(R.id.btn_send_files);
+        resend = (AppCompatButton) mContentView.findViewById(R.id.resend);
+        resend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                WifiActivity.getInstance().sendRequestedFiles();
+                Toast.makeText(getActivity(), "Resending again", Toast.LENGTH_SHORT).show();
+                resend.setEnabled(false);
+                resend.setVisibility(View.INVISIBLE);
+            }
+        });
         mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -152,7 +164,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             dataFile.setSize(convertToStringRepresentation(file.getAbsoluteFile().length()));
             dataFileArrayList.add(dataFile);
         }
-
+        if (dataFileArrayList.size() < 1) {
+            Toast.makeText(getActivity(), "please download some files from server first", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String localIP = Utils.getIPAddress(true);
         if (wifiP2pDevice == null) {
             Toast.makeText(getActivity(), R.string.try_turning_wifi_off_on, Toast.LENGTH_SHORT).show();
@@ -314,10 +329,27 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             Log.i("File", dirs.getAbsolutePath());
                             Log.i("File", f.getAbsolutePath());
                             AppGlobals.showFileProgress("Receiving", f.getName().split("\\|")[2], R.drawable.downlaod,(int) size);
-
-                            Log.d(getClass().getSimpleName(), "server: copying files " + f.toString());
                             copyFile(dIn, new FileOutputStream(f), size);
-                            Log.i("GetDataFromStream", "----------- END");
+                            if (Local.foreground) {
+                                Log.i("TAG", f.getAbsolutePath());
+                                String[] onlyFileName = f.getName().split("\\|");
+                                DataFile dataFile = new DataFile();
+                                dataFile.setUrl(f.getAbsolutePath());
+                                dataFile.setId(Integer.parseInt(onlyFileName[1]));
+                                dataFile.setUuid(onlyFileName[0]);
+                                String[] fileAndExt = onlyFileName[2].split("\\.");
+                                dataFile.setTitle(fileAndExt[0]);
+                                dataFile.setExtension(fileAndExt[1]);
+                                dataFile.setSize(convertToStringRepresentation(f.getAbsoluteFile().length()));
+                                Local.dataFileArrayList.add(dataFile);
+                                Local.getInstance().updatedata();
+                                if (Server.foreground) {
+                                    Server.alreadyExistFiles.add(dataFile.getId() + dataFile.getTitle() + "." +
+                                            dataFile.getExtension());
+                                    Server.getInstance().updateDownloaded(dataFile.getId());
+                                    Server.getInstance().updateList();
+                                }
+                            }
                             Log.d(getClass().getSimpleName(), "Client: Data written " + f.length());
                             done = true;
                             break;
@@ -339,6 +371,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     public void requestAidWorkerToSendFiles(ArrayList<DataFile> fileArray) {
         final StringBuilder stringBuilder = new StringBuilder();
+        AppGlobals.senderCounter = 0;
         AppGlobals.requestedFileArrayList = fileArray;
         for (DataFile dataFile : fileArray) {
             stringBuilder.append(dataFile.getTitle());
@@ -347,7 +380,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             stringBuilder.append("\n");
         }
         Log.i("TAG", "received " + fileArray.size());
-        getInstance().getActivity().runOnUiThread(new Runnable() {
+        AppGlobals.sActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Toast.makeText(AppGlobals.getContext(), R.string.request_received, Toast.LENGTH_SHORT).show();
@@ -470,20 +503,20 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     }
 
     @Override
-    public void onLocationForNurse(Location location, File file) {
+    public void onLocationForNurse(Location location, File file, boolean currentLocation) {
         NurseDetails  nurseDetails = new NurseDetails();
         TelephonyManager telephonyManager = (TelephonyManager) AppGlobals.getContext()
                 .getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         nurseDetails.setDeviceId(telephonyManager.getDeviceId());
         nurseDetails.setFileId(Integer.parseInt(file.getName().split("\\|")[1]));
         nurseDetails.setLocation(location.getLatitude()+","+location.getLongitude());
-        nurseDetails.setCurrentLocation(true);
+        nurseDetails.setCurrentLocation(currentLocation);
         nurseDetails.setTimeStamp(String.valueOf(new Date().getTime()));
         sendNurseDetailsToWorker(nurseDetails);
     }
 
     @Override
-    public void onLocationForAidWorker(Location location, String fileId) {
+    public void onLocationForAidWorker(Location location, String fileId, boolean currentLocation) {
 
     }
 

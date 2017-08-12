@@ -90,7 +90,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public void onPause() {
         super.onPause();
         unregisterReceiver(receiver);
-        stopDiscovery();
+        stopDiscovery(1000*20);
     }
 
     /**
@@ -172,7 +172,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 AppGlobals.getNotificationManager().cancel(AppGlobals.NOTIFICATION_ID);
             }
         });
-        stopDiscovery();
+        stopDiscovery(1000*60);
         if (manual)
         if (AppGlobals.USER_TYPE == 1) {
             DeviceListFragment.getInstance().start();
@@ -183,7 +183,7 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
 
-    public static void stopDiscovery() {
+    public static void stopDiscovery(long time) {
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -196,8 +196,10 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                                 Toast.makeText(AppGlobals.getContext(), "Discovery Stop",
                                         Toast.LENGTH_SHORT).show();
                                 if (AppGlobals.USER_TYPE == 1) {
-                                    DeviceListFragment.randomTextView.removeAll();
-                                    DeviceListFragment.radarScanView.stopRadar();
+                                    if (DeviceListFragment.randomTextView != null) {
+                                        DeviceListFragment.randomTextView.removeAll();
+                                        DeviceListFragment.radarScanView.stopRadar();
+                                    }
                                 } else {
                                     DeviceListFragment.rippleView.stopRippleAnimation();
                                 }
@@ -210,11 +212,11 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                             }
                         });
                     }
-                }else {
-                    stopDiscovery();
+                } else {
+                    stopDiscovery(1000*40);
                 }
             }
-        }, 1000*60);
+        }, time);
     }
 
     @Override
@@ -263,7 +265,9 @@ public class WifiActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 NotificationManager notificationManager = (NotificationManager)
                         getSystemService(Context.NOTIFICATION_SERVICE);
                 notificationManager.cancel(100011);
-                fragment.getView().setVisibility(View.GONE);
+                if (fragment.getView() != null) {
+                    fragment.getView().setVisibility(View.GONE);
+                }
                 AppGlobals.CURRENT_STATE = "Disconnected";
             }
 

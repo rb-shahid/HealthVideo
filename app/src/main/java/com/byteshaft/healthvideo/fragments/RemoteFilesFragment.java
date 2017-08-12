@@ -135,6 +135,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
 
     public static void update() {
         if (remoteFilesAdapter != null)
+
         remoteFilesAdapter.notifyDataSetChanged();
     }
 
@@ -195,20 +196,25 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                         != PackageManager.PERMISSION_GRANTED) {
                     checkAndRequestPermissions();
                 } else {
-                    if (toBeDownload.size() > 0) {
-                        counter = 0;
-                        String[] strings = toBeDownload.get(downloadingNow.get(counter));
-                        Log.i("TAG", "Remote file " + strings[0] + " " + strings[1] + " " + strings[2] + " " + strings[3]);
-                        mBuilder = new NotificationCompat.Builder(getActivity().getApplicationContext());
-                        mBuilder.setContentInfo("Download...")
-                                .setContentText("Downloading: " + capitalizeLetter(strings[2]))
-                                .setAutoCancel(false)
-                                .setSmallIcon(R.drawable.downlaod);
-                        mBuilder.setProgress(100, 0, false);
-                        mNotificationManager.notify(id, mBuilder.build());
-                        new DownloadTask().execute(strings);
+                    if (Helpers.locationEnabled()) {
+                        if (toBeDownload.size() > 0) {
+                            counter = 0;
+                            String[] strings = toBeDownload.get(downloadingNow.get(counter));
+                            Log.i("TAG", "Remote file " + strings[0] + " " + strings[1] + " " + strings[2] + " " + strings[3]);
+                            mBuilder = new NotificationCompat.Builder(getActivity().getApplicationContext());
+                            mBuilder.setContentInfo("Download...")
+                                    .setContentText("Downloading: " + capitalizeLetter(strings[2]))
+                                    .setAutoCancel(false)
+                                    .setSmallIcon(R.drawable.downlaod);
+                            mBuilder.setProgress(100, 0, false);
+                            mNotificationManager.notify(id, mBuilder.build());
+                            new DownloadTask().execute(strings);
+                        }
+                    } else {
+                        Helpers.dialogForLocationEnableManually(getActivity());
                     }
-                }
+
+            }
                 return true;
             default:
                 return false;
@@ -307,13 +313,13 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
     }
 
     @Override
-    public void onLocationForNurse(Location location, File file) {
+    public void onLocationForNurse(Location location, File file, boolean currentLocation) {
 
     }
 
     @Override
-    public void onLocationForAidWorker(Location location, String fileId) {
-        sendProgressUpdateForSuccessDownload(fileId, location.getLatitude() + "," + location.getLongitude(), true);
+    public void onLocationForAidWorker(Location location, String fileId, boolean currentLocation) {
+        sendProgressUpdateForSuccessDownload(fileId, location.getLatitude() + "," + location.getLongitude(), currentLocation);
 
     }
 
@@ -411,7 +417,7 @@ public class RemoteFilesFragment extends Fragment implements HttpRequest.OnReady
                 input = connection.getInputStream();
                 output = new FileOutputStream(directory+"/"+sUrl[4] +"|"+downloadingNow.get(counter)+"|"+sUrl[2]+"."+sUrl[1]);
                 file = new File(directory+"/"+sUrl[4] +"|"+downloadingNow.get(counter)+"|"+sUrl[2]+"."+sUrl[1]);
-                byte data[] = new byte[4096];
+                byte data[] = new byte[8096];
                 long total = 0;
                 int count;
                 while ((count = input.read(data)) != -1) {

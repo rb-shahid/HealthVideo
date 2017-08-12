@@ -42,5 +42,13 @@
                 android:text="@string/send_array" />
 
         </LinearLayout>
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/resend"
+            android:layout_gravity="bottom"
+            android:enabled="false"
+            android:visibility="invisible"
+            android:text="@string/resend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 </FrameLayout>

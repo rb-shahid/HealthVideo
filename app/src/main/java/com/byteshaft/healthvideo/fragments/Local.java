@@ -51,16 +51,17 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
     private View mBaseView;
     private static final String SPACE = " ";
     private static final String DOTS = "...";
-    private ArrayList<DataFile> dataFileArrayList;
+    public static ArrayList<DataFile> dataFileArrayList;
     private ListView mListView;
-    private LocalFileFilesAdapter localFileFilesAdapter;
+    public LocalFileFilesAdapter localFileFilesAdapter;
     private HashMap<Integer, DataFile> toBeDelete;
     private static final long K = 1024;
     private static final long M = K * K;
     private static final long G = M * K;
     private static final long T = G * K;
-    private static Local localFilesFragment;
+    public static Local localFilesFragment;
     private MenuItem deleteMenu;
+    public static boolean foreground = false;
 
     public static Local getInstance() {
         return localFilesFragment;
@@ -69,12 +70,39 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
+        foreground = true;
+        AppGlobals.sActivity = getActivity();
         localFilesFragment = this;
         mBaseView = inflater.inflate(R.layout.local, container, false);
         mListView = (ListView) mBaseView.findViewById(R.id.local_files_list);
         mListView.setOnItemClickListener(this);
         readFiles();
         return mBaseView;
+    }
+
+    public void updatedata() {
+        if (foreground && localFileFilesAdapter != null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    localFileFilesAdapter.notifyDataSetChanged();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        foreground = true;
+
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        foreground = false;
     }
 
     public void readFiles() {
@@ -160,6 +188,8 @@ public class Local extends Fragment implements AdapterView.OnItemClickListener {
                                     File toBeDelete = new File(file.getUrl());
                                     String strings[] = {file.getTitle(), file.getExtension(), String.valueOf(count),
                                             String.valueOf(file.getId())};
+                                    Server.alreadyExistFiles.remove(file.getId()+file.getTitle()+"."+ file.getExtension());
+                                    Server.getInstance().updateList();
                                     if (toBeDelete.delete())
                                         Log.i("TAG", String.valueOf(Integer.parseInt(strings[2])));
                                     delete.add(Integer.parseInt(strings[2]));

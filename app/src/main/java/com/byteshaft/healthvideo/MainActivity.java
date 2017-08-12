@@ -39,6 +39,8 @@ import com.byteshaft.healthvideo.fragments.Server;
 import com.byteshaft.healthvideo.utils.CustomTypefaceSpan;
 import com.byteshaft.healthvideo.utils.Helpers;
 import com.byteshaft.healthvideo.utils.InternetBroadCastReceiver;
+import com.byteshaft.healthvideo.wifi.DeviceDetailFragment;
+import com.byteshaft.healthvideo.wifi.WifiActivity;
 
 import static com.byteshaft.healthvideo.utils.InternetBroadCastReceiver.isNetworkAvailable;
 
@@ -66,6 +68,8 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         instance = this;
+        AppGlobals.senderCounter = 0;
+        AppGlobals.sActivity = this;
         if (AccountManagerActivity.getInstance() != null) {
             AccountManagerActivity.getInstance().finish();
         }
@@ -145,6 +149,10 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
+            if (AppGlobals.CURRENT_STATE.equals("Connected")) {
+                WifiActivity.getInstance().disconnect();
+            }
+            WifiActivity.stopDiscovery(0);
             super.onBackPressed();
 
         }

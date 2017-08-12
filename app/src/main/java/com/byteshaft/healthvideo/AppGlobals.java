@@ -1,9 +1,11 @@
 package com.byteshaft.healthvideo;
 
+import android.app.Activity;
 import android.app.Application;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.support.v4.app.NotificationCompat;
 
@@ -44,7 +46,9 @@ public class AppGlobals extends Application {
     public static ArrayList<DataFile> requestedFileArrayList;
     public static int senderCounter = 0;
     private static NotificationCompat.Builder builder;
-    private static String LOGTAG = "LOGTAG ";
+    private static String LOGTAG = "LOGTAG";
+    public static Activity sActivity;
+    public static final int LOCATION_ENABLE = 1001;
 
 
     @Override
@@ -107,6 +111,7 @@ public class AppGlobals extends Application {
     public static void showFileProgress(String currentTask, String fileName, int id, int max) {
         NotificationCompat.Builder mBuilder = AppGlobals.getBuilder();
         mBuilder.setContentInfo(currentTask+"...")
+                .setLargeIcon(BitmapFactory.decodeResource(getContext().getResources(), id))
                 .setContentText(fileName)
                 .setAutoCancel(false)
                 .setSmallIcon(id);

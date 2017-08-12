@@ -33,12 +33,12 @@ public class InternetBroadCastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
         Log.e("TAG", "Internet changed");
-        this.mContext = context;
+        mContext = context;
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 Log.e("TAG", "Internet State" + isNetworkAvailable(context));
-                if (isNetworkAvailable(context)) {
+                if (isNetworkAvailable(context) && AppGlobals.isLogin()) {
                     new CheckInternet().execute();
                 }
             }

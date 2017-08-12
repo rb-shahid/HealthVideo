@@ -9,6 +9,6 @@ import java.io.File;
  */
 
 public interface OnLocationAcquired {
-    void onLocationForNurse(Location location, File file);
-    void onLocationForAidWorker(Location location, String fileId);
+    void onLocationForNurse(Location location, File file, boolean currentLocation);
+    void onLocationForAidWorker(Location location, String fileId, boolean currentLocation);
 }

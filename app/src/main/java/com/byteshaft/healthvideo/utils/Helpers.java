@@ -2,7 +2,11 @@ package com.byteshaft.healthvideo.utils;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.location.LocationManager;
+import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
@@ -79,5 +83,47 @@ public class Helpers {
 
         alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
+
+    public static boolean locationEnabled() {
+        LocationManager lm = (LocationManager) AppGlobals.getContext()
+                .getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch (Exception ex) {
+        }
+
+        try {
+            network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch (Exception ex) {
+        }
+
+        return gps_enabled || network_enabled;
+    }
+
+    public static void dialogForLocationEnableManually(final Activity activity) {
+        android.app.AlertDialog.Builder dialog = new android.app.AlertDialog.Builder(activity);
+        dialog.setMessage("Location is not enabled");
+        dialog.setPositiveButton("Turn on", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                // TODO Auto-generated method stub
+                Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                activity.startActivityForResult(myIntent, AppGlobals.LOCATION_ENABLE);
+                //get gps
+            }
+        });
+        dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                // TODO Auto-generated method stub
+
+            }
+        });
+        dialog.show();
     }
 }

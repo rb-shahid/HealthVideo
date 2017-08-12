@@ -23,7 +23,7 @@ import java.io.File;
  * Created by s9iper1 on 8/8/17.
  */
 
-public class GetLocation  implements GoogleApiClient.ConnectionCallbacks,
+public class GetLocation implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private LocationRequest mLocationRequest;
@@ -66,11 +66,21 @@ public class GetLocation  implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onConnectionSuspended(int i) {
+        Log.i("TAG", "onConnectionSuspended");
+        if (getLastKnownLocation() != null) {
+            if (forNurse) {
+                onLocationAcquired.onLocationForNurse(getLastKnownLocation(), file, true);
+            } else {
+                onLocationAcquired.onLocationForAidWorker(getLastKnownLocation(), fileId, true);
+            }
+        }
+
 
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.i("TAG", "onConnectionFailed");
 
     }
 
@@ -100,13 +110,13 @@ public class GetLocation  implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d("TAG", "Location changed called" + "Lat " + location.getLatitude() + ", Lng "+ location.getLongitude());
+        Log.d("TAG", "Location changed called" + "Lat " + location.getLatitude() + ", Lng " + location.getLongitude());
         if (locationCounter >= 1) {
             stopLocationUpdate();
             if (forNurse) {
-                onLocationAcquired.onLocationForNurse(location, file);
+                onLocationAcquired.onLocationForNurse(location, file, true);
             } else {
-                onLocationAcquired.onLocationForAidWorker(location, fileId);
+                onLocationAcquired.onLocationForAidWorker(location, fileId, true);
             }
         }
         locationCounter++;
@@ -117,5 +127,24 @@ public class GetLocation  implements GoogleApiClient.ConnectionCallbacks,
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
         }
+    }
+
+    private Location getLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(AppGlobals.getContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED && ActivityCompat
+                .checkSelfPermission(AppGlobals.getContext(),
+                        Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return null;
+        }
+        return LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
     }
 }

@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.byteshaft.healthvideo.AppGlobals;
@@ -107,16 +108,32 @@ public class FileTransferService extends IntentService {
                 }
                 AppGlobals.removeNotification();
                 dos.close();
-				AppGlobals.senderCounter++;
-				if (AppGlobals.senderCounter < AppGlobals.requestedFileArrayList.size()) {
-					WifiActivity.getInstance().sendRequestedFiles();
-				}
+                mMainThreadHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.e(getClass().getSimpleName(),"counter " + AppGlobals.senderCounter);
+                        AppGlobals.senderCounter++;
+                        if (AppGlobals.senderCounter < AppGlobals.requestedFileArrayList.size()) {
+                            Log.e(getClass().getSimpleName(),"counter " + AppGlobals.senderCounter);
+                            WifiActivity.getInstance().sendRequestedFiles();
+                            Log.e(getClass().getSimpleName(),"sending next file ");
+                        } else {
+                            AppGlobals.senderCounter = 0;
+                        }
+                    }
+                }, 4000);
 //				DeviceDetailFragment.copyFile(is, stream);
 			} catch (IOException e) {
 				Log.e(getClass().getSimpleName(), e.getMessage());
-                Toast.makeText(this, "please try again", Toast.LENGTH_SHORT).show();
-                AppGlobals.removeNotification();
-                DeviceDetailFragment.getInstance().requestAidWorkerToSendFiles(AppGlobals.requestedFileArrayList);
+                mMainThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        DeviceDetailFragment.resend.setEnabled(true);
+                        DeviceDetailFragment.resend.setVisibility(View.VISIBLE);
+                    }
+                });
+//                AppGlobals.removeNotification();
+//                DeviceDetailFragment.getInstance().requestAidWorkerToSendFiles(AppGlobals.requestedFileArrayList);
 			} finally {
 				if (socket != null) {
 					if (socket.isConnected()) {
@@ -188,7 +205,6 @@ public class FileTransferService extends IntentService {
                 Log.d(getClass().getSimpleName(), "Opening client socket - ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-
                 Log.d(getClass().getSimpleName(), "Client socket - " + socket.isConnected());
                 DataOutputStream stream = new DataOutputStream(socket.getOutputStream());
                 stream.writeByte(dataType);

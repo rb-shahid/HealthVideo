@@ -77,7 +77,7 @@
     <string name="failed">Failed, please try again</string>
     <string name="send_array">Update file on Nurse</string>
     <string name="send_files">send Files</string>
-    <string name="try_turning_wifi_off_on">Error occurred try turning wifi on and off</string>
+    <string name="try_turning_wifi_off_on">Error occurred try reconnecting</string>
     <string name="received">Received</string>
     <string name="request_received">Request Received</string>
     <string name="file_request">Files Request</string>
@@ -97,6 +97,7 @@
     <string name="already_synced">Already Synced</string>
     <string name="support_url">www.pessoss.com/medvite_hilfe/support</string>
     <string name="privacy_policy_url">www.pessoss.com/​medvite​_privacy-pol</string>
+    <string name="resend">Resend</string>
 
 
 </resources>

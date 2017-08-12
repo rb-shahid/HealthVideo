@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.byteshaft.healthvideo.fragments.LocalFilesFragment.convertToStringRepresentation;
 import static com.byteshaft.healthvideo.wifi.DeviceDetailFragment.IP_SERVER;
 import static com.byteshaft.healthvideo.wifi.DeviceDetailFragment.PORT;
 
@@ -61,7 +62,7 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
     private File directory;
     public static ArrayList<String> alreadyExistFiles;
     private ArrayList<Integer> downloadingNow;
-    private boolean foreground = false;
+    public static boolean foreground = false;
     private int id = 1001;
     private MenuItem saveMenuItem;
     private final int PERMISSION_REQUEST = 10;
@@ -76,6 +77,7 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         instance = this;
+        AppGlobals.sActivity = getActivity();
         mBaseView = inflater.inflate(R.layout.server, container, false);
         remoteFileArrayList = new ArrayList<>();
         toBeDownload = new HashMap<>();
@@ -96,11 +98,52 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
         Log.i("TAG", "Remote file " + filesArray.length);
         alreadyExistFiles = new ArrayList<>();
         for (File file: filesArray) {
+            Log.i("TAG", file.getAbsolutePath());
             String[] onlyFileName = file.getName().split("\\|");
-            alreadyExistFiles.add(onlyFileName[0]+onlyFileName[1]);
-            Log.i("TAG", "Remote file " + onlyFileName[0]+onlyFileName[1]);
+            Log.i("TAG", onlyFileName[0]);
+            Log.i("TAG", onlyFileName[1]);
+            Log.i("TAG", onlyFileName[2]);
+            DataFile dataFile = new DataFile();
+            dataFile.setUrl(file.getAbsolutePath());
+            dataFile.setId(Integer.parseInt(onlyFileName[1]));
+            dataFile.setUuid(onlyFileName[0]);
+            String[] fileAndExt = onlyFileName[2].split("\\.");
+            Log.i("TAG", "name " + onlyFileName[1]);
+            Log.i("TAG", "only name " + fileAndExt[0]);
+            dataFile.setTitle(fileAndExt[0]);
+            dataFile.setExtension(fileAndExt[1]);
+            dataFile.setSize(convertToStringRepresentation(file.getAbsoluteFile().length()));
+            alreadyExistFiles.add(dataFile.getId()+dataFile.getTitle()+"."+ dataFile.getExtension());
+//
+//            Log.i("TAG", "Remote file " + file.getAbsoluteFile());
+//            String[] onlyFileName = file.getName().split("\\|");
+//            alreadyExistFiles.add(onlyFileName[0]+onlyFileName[1]);
+//            Log.i("TAG", "Remote file " + onlyFileName[0]+onlyFileName[1]);
         }
+        Log.i("TAG", "already " + alreadyExistFiles);
         return mBaseView;
+    }
+
+    public void updateDownloaded(int id) {
+        if (foreground)
+        toBeDownload.remove(id);
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                remoteFilesAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    public void updateList() {
+        if (foreground && remoteFilesAdapter != null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    remoteFilesAdapter.notifyDataSetChanged();
+                }
+            });
+        }
     }
 
     @Override
@@ -150,16 +193,18 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.download:
+
                 ArrayList<DataFile> arrayList = new ArrayList<>();
                 for (Map.Entry<Integer,DataFile> entry : toBeDownload.entrySet()) {
                     Integer key = entry.getKey();
                     arrayList.add(entry.getValue());
                 }
                 if (checkAndRequestPermissions()) {
-                    sendFilesToRequest(arrayList);
-                    
-                } else {
-                    // send requested files
+                    if (Helpers.locationEnabled()) {
+                        sendFilesToRequest(arrayList);
+                    } else {
+                        Helpers.dialogForLocationEnableManually(getActivity());
+                    }
                 }
                 return true;
             default:
@@ -253,7 +298,7 @@ public class Server extends Fragment implements AdapterView.OnItemClickListener 
             stringBuilder.append(dataFile.getSize());
             viewHolder.fileName.setText(stringBuilder.toString());
             String fullFileName = dataFile.getId()+dataFile.getTitle()+"."+dataFile.getExtension();
-            Log.i("TAG", "Remote file full name " + fullFileName);
+            Log.i("TAG", "full name " + fullFileName);
             if (alreadyExistFiles.contains(fullFileName)) {
                 viewHolder.fileName.setTextColor(getResources().getColor(R.color.already_existing_files));
                 viewHolder.fileName.setTypeface(null, Typeface.BOLD_ITALIC);

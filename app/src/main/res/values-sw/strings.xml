@@ -51,8 +51,8 @@
 
     <string-array name="language_array">
         <item>English</item>
-        <item>French</item>
-        <item>Spanish</item>
+        <item>Arabic</item>
+        <item>Swahili</item>
     </string-array>
 
     <!--wifi-->
@@ -73,5 +73,29 @@
 
     <string name="empty"></string>
     <string name="network_unreachable">Network unreachable</string>
-
+    <string name="connecting">Connecting...</string>
+    <string name="failed">Failed, please try again</string>
+    <string name="send_array">Update file on Nurse</string>
+    <string name="send_files">send Files</string>
+    <string name="try_turning_wifi_off_on">Error occurred try reconnecting</string>
+    <string name="received">Received</string>
+    <string name="request_received">Request Received</string>
+    <string name="file_request">Files Request</string>
+    <string name="delete_confirmation">Delete Confirmation</string>
+    <string name="send">Send</string>
+    <string name="cancel">Cancel</string>
+    <string name="connection_abort">Aborting connection</string>
+    <string name="check_internet">please check your internet connection and try again</string>
+    <string name="want_to_delete">Do you want to delete selected files ?</string>
+    <string name="username">username</string>
+    <string name="logout">logout</string>
+    <string name="connectivity">connectivity</string>
+    <string name="wi_fi_connection">Wi-fi connection</string>
+    <string name="sync_data">Sync data</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="sync_in_progress">Sync in progress</string>
+    <string name="already_synced">Already Synced</string>
+    <string name="support_url">www.pessoss.com/medvite_hilfe/support</string>
+    <string name="privacy_policy_url">www.pessoss.com/​medvite​_privacy-pol</string>
+    <string name="resend">Resend</string>
 </resources>

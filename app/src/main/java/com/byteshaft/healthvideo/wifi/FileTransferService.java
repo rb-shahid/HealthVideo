@@ -92,7 +92,7 @@ public class FileTransferService extends IntentService {
                 DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
                 Log.d(getClass().getSimpleName(), "Client: Data written " + myFile.getAbsoluteFile().length());
                 dos.writeLong(myFile.length());
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[8096];
                 int bytesRead;
                 int uploaded = 0;
                 AppGlobals.showFileProgress("Sending", myFile.getName().split("\\|")[2],

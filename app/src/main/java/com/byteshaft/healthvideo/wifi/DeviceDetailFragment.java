@@ -423,7 +423,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     public boolean copyFile(DataInputStream inputStream, OutputStream out, long size) throws IOException {
         Log.i("TAG", "start");
-        byte buf[] = new byte[1024];
+        byte buf[] = new byte[8096];
         int bytesRead;
         mSent = 0;
         mSize = size;

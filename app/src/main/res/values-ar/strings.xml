@@ -68,7 +68,7 @@
     <string name="empty_message">لم تجد الأجهزة. بدوره على P2P وأداء الاكتشاف من شريط العمل</string>
     <string name="p2p_off_warning">تمكين P2P من زر شريط الإجراءات أعلاه أو إعدادات النظام</string>
     <string name="group_owner_text">"هل أنا مالك المجموعة؟ "</string>
-    <string name="label_me">أنا</string>
+    <string name="label_me">ME</string>
     <string name="label_peers">PEERS</string>
 
     <string name="empty"></string>
